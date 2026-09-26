@@ -4,6 +4,7 @@ import { Bookmark } from "lucide-react";
 import { useOptimistic, useTransition } from "react";
 
 import { SignInLink } from "@/components/sign-in-link";
+import { useFlashError } from "@/hooks/use-flash-error";
 import { toggleBookmark } from "@/lib/actions/community";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,7 @@ export function SaveButton({
 }) {
   const [optimisticSaved, setOptimisticSaved] = useOptimistic(saved);
   const [pending, startTransition] = useTransition();
+  const [error, flashError] = useFlashError();
 
   const classes = cn(
     "relative z-10 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm font-medium transition-colors",
@@ -41,20 +43,27 @@ export function SaveButton({
   }
 
   return (
-    <button
-      type="button"
-      className={classes}
-      aria-pressed={optimisticSaved}
-      disabled={pending}
-      onClick={() =>
-        startTransition(async () => {
-          setOptimisticSaved(!optimisticSaved);
-          const result = await toggleBookmark(postId);
-          if (!result.ok) alert(result.error);
-        })
-      }
-    >
-      {content}
-    </button>
+    <>
+      <button
+        type="button"
+        className={classes}
+        aria-pressed={optimisticSaved}
+        disabled={pending}
+        onClick={() =>
+          startTransition(async () => {
+            setOptimisticSaved(!optimisticSaved);
+            const result = await toggleBookmark(postId);
+            if (!result.ok) flashError(result.error);
+          })
+        }
+      >
+        {content}
+      </button>
+      {error && (
+        <span role="alert" className="relative z-10 text-xs text-destructive">
+          {error}
+        </span>
+      )}
+    </>
   );
 }

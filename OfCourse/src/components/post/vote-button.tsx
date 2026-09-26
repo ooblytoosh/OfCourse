@@ -4,6 +4,7 @@ import { ArrowBigDown, ArrowBigUp } from "lucide-react";
 import { useOptimistic, useTransition } from "react";
 
 import { SignInLink } from "@/components/sign-in-link";
+import { useFlashError } from "@/hooks/use-flash-error";
 import { castVote } from "@/lib/actions/community";
 import { cn } from "@/lib/utils";
 
@@ -34,6 +35,7 @@ export function VoteButton({
 }) {
   const [optimistic, setOptimistic] = useOptimistic<VoteState, 1 | -1>({ vote, score }, applyVote);
   const [pending, startTransition] = useTransition();
+  const [error, flashError] = useFlashError();
 
   const wrapper = cn(
     "relative z-10 inline-flex items-center gap-0.5 rounded-full text-sm font-medium tabular-nums",
@@ -57,34 +59,41 @@ export function VoteButton({
     startTransition(async () => {
       setOptimistic(value);
       const result = await castVote(postId, value);
-      if (!result.ok) alert(result.error);
+      if (!result.ok) flashError(result.error);
     });
 
   return (
-    <div className={wrapper} role="group" aria-label="Vote">
-      <button
-        type="button"
-        className={cn(arrowClass, optimistic.vote !== 1 && "hover:bg-muted hover:text-brand")}
-        aria-pressed={optimistic.vote === 1}
-        aria-label={optimistic.vote === 1 ? "Remove upvote" : "Upvote"}
-        disabled={pending}
-        onClick={() => vote_(1)}
-      >
-        <ArrowBigUp className={cn("size-5", optimistic.vote === 1 && "fill-current")} />
-      </button>
-      <span className="min-w-4 text-center" aria-label={`Score ${optimistic.score}`}>
-        {optimistic.score}
-      </span>
-      <button
-        type="button"
-        className={cn(arrowClass, optimistic.vote !== -1 && "hover:bg-muted hover:text-indigo-600")}
-        aria-pressed={optimistic.vote === -1}
-        aria-label={optimistic.vote === -1 ? "Remove downvote" : "Downvote"}
-        disabled={pending}
-        onClick={() => vote_(-1)}
-      >
-        <ArrowBigDown className={cn("size-5", optimistic.vote === -1 && "fill-current")} />
-      </button>
-    </div>
+    <>
+      <div className={wrapper} role="group" aria-label="Vote">
+        <button
+          type="button"
+          className={cn(arrowClass, optimistic.vote !== 1 && "hover:bg-muted hover:text-brand")}
+          aria-pressed={optimistic.vote === 1}
+          aria-label={optimistic.vote === 1 ? "Remove upvote" : "Upvote"}
+          disabled={pending}
+          onClick={() => vote_(1)}
+        >
+          <ArrowBigUp className={cn("size-5", optimistic.vote === 1 && "fill-current")} />
+        </button>
+        <span className="min-w-4 text-center" aria-label={`Score ${optimistic.score}`}>
+          {optimistic.score}
+        </span>
+        <button
+          type="button"
+          className={cn(arrowClass, optimistic.vote !== -1 && "hover:bg-muted hover:text-indigo-600")}
+          aria-pressed={optimistic.vote === -1}
+          aria-label={optimistic.vote === -1 ? "Remove downvote" : "Downvote"}
+          disabled={pending}
+          onClick={() => vote_(-1)}
+        >
+          <ArrowBigDown className={cn("size-5", optimistic.vote === -1 && "fill-current")} />
+        </button>
+      </div>
+      {error && (
+        <span role="alert" className="relative z-10 text-xs text-destructive">
+          {error}
+        </span>
+      )}
+    </>
   );
 }
