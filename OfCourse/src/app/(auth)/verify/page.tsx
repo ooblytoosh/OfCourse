@@ -23,9 +23,12 @@ export default async function VerifyPage({ searchParams }: PageProps<"/verify">)
         </span>
         <h1 className="text-xl font-semibold">Check your email</h1>
         <p className="text-sm text-muted-foreground">
-          We sent a verification code to{" "}
-          <span className="font-medium text-foreground">{address || "your email"}</span>. Enter it
-          below to confirm it&apos;s you.
+          We sent an email to{" "}
+          <span className="font-medium text-foreground">{address || "your university address"}</span>.
+          Click the link in it to continue, or type the code below if the email has one.
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Open the link in this browser. It can take a minute to arrive, so check spam too.
         </p>
       </div>
       {address ? (

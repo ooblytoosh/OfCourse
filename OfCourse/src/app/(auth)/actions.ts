@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { safeRedirectPath } from "@/lib/auth";
 import { emailMatchesDomain } from "@/lib/data/profiles";
+import { friendlyEmailError } from "@/lib/email-errors";
 import {
   gradYearOptions,
   normalizeUsername,
@@ -145,7 +146,7 @@ export async function signUp(_prev: SignupState, formData: FormData): Promise<Si
       emailRedirectTo: `${siteUrl}/auth/confirm?next=/welcome`,
     },
   });
-  if (error) return fail({ form: error.message });
+  if (error) return fail({ form: friendlyEmailError(error.message) });
 
   const verifyUrl = (mode: CodeMode) =>
     `/verify?${new URLSearchParams({ email: values.email, mode })}`;
@@ -158,7 +159,11 @@ export async function signUp(_prev: SignupState, formData: FormData): Promise<Si
   // Email confirmation is off: the account is signed in but not verified yet.
   // Email a sign-in code to prove the university address.
   if (values.universityId === UNLISTED_UNIVERSITY) redirect("/welcome");
-  await supabase.auth.signInWithOtp({ email: values.email, options: { shouldCreateUser: false } });
+  // If this email fails to send, the verify page's "send a new email" retries it.
+  await supabase.auth.signInWithOtp({
+    email: values.email,
+    options: { shouldCreateUser: false, emailRedirectTo: `${siteUrl}/auth/confirm?next=/welcome` },
+  });
   redirect(verifyUrl("email"));
 }
 
@@ -206,23 +211,23 @@ export async function verifyEmailCode(_prev: CodeFormState, formData: FormData):
   redirect(next);
 }
 
-export async function resendEmailCode(email: string, mode: CodeMode): Promise<{ ok: boolean; message: string }> {
-  if (!isSupabaseConfigured() || !email) return { ok: false, message: "Couldn't send a new code." };
+export async function resendEmailCode(
+  email: string,
+  mode: CodeMode,
+  next = "/welcome",
+): Promise<{ ok: boolean; message: string }> {
+  if (!isSupabaseConfigured() || !email) return { ok: false, message: "Couldn't send a new email." };
   const supabase = await createClient();
+  const siteUrl = getSiteUrl((await headers()).get("origin"));
+  const emailRedirectTo = `${siteUrl}/auth/confirm?next=${encodeURIComponent(safeRedirectPath(next))}`;
   const { error } =
     mode === "signup"
-      ? await supabase.auth.resend({ type: "signup", email })
+      ? await supabase.auth.resend({ type: "signup", email, options: { emailRedirectTo } })
       : mode === "email_change"
-        ? await supabase.auth.resend({ type: "email_change", email })
-        : await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
-  if (error) {
-    const wait = /rate|seconds|security purposes/i.test(error.message);
-    return {
-      ok: false,
-      message: wait ? "Please wait a minute before asking for another code." : "Couldn't send a new code.",
-    };
-  }
-  return { ok: true, message: `New code sent to ${email}.` };
+        ? await supabase.auth.resend({ type: "email_change", email, options: { emailRedirectTo } })
+        : await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: false, emailRedirectTo } });
+  if (error) return { ok: false, message: friendlyEmailError(error.message) };
+  return { ok: true, message: `New email sent to ${email}.` };
 }
 
 export async function signOut() {
