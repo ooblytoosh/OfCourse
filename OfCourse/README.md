@@ -92,6 +92,13 @@ supabase/
   seed.sql            Georgia Tech courses + fictional demo students, posts, comments and votes
 ```
 
+## Votes and course ratings
+
+Posts take one up- or downvote per student (`votes.value` is 1 or -1; a
+trigger keeps `posts.vote_score` in sync). Students rate a course once
+(workload, difficulty, would take again) in `course_ratings`; individual
+ratings are private and the `course_rating_stats` view exposes only averages.
+
 ## Profile photos
 
 Photos upload to the public `avatars` Storage bucket (created by the
@@ -104,8 +111,8 @@ inside their own folder; uploads are limited to PNG/JPG/WebP/GIF up to 2 MB.
 `ofcourse.example` domain, with no passwords, shown as verified Georgia Tech
 students for the demo) and original demo posts,
 comments and votes: 22 posts in CS 1332, plus a few in CS 2110 and MATH 1554.
-Course stats are marked as demo data in the UI. None of it is copied from real
-course materials.
+Course stats in the sidebar are averages of student ratings (the demo students
+rate the courses they're in). None of it is copied from real course materials.
 
 ## Content policy
 

@@ -1,65 +1,90 @@
 "use client";
 
-import { ArrowBigUp } from "lucide-react";
+import { ArrowBigDown, ArrowBigUp } from "lucide-react";
 import { useOptimistic, useTransition } from "react";
 
 import { SignInLink } from "@/components/sign-in-link";
-import { toggleVote } from "@/lib/actions/community";
+import { castVote } from "@/lib/actions/community";
 import { cn } from "@/lib/utils";
 
-type VoteState = { voted: boolean; score: number };
+type Vote = -1 | 0 | 1;
+type VoteState = { vote: Vote; score: number };
+
+// Pressing the active arrow again removes the vote; the other arrow switches it.
+function applyVote(state: VoteState, pressed: 1 | -1): VoteState {
+  const next: Vote = state.vote === pressed ? 0 : pressed;
+  return { vote: next, score: state.score - state.vote + next };
+}
+
+const arrowClass =
+  "inline-flex size-7 items-center justify-center rounded-full transition-colors disabled:opacity-60";
 
 export function VoteButton({
   postId,
-  voted,
+  vote,
   score,
   signedIn,
   className,
-}: VoteState & { postId: string; signedIn: boolean; className?: string }) {
-  const [optimistic, setOptimistic] = useOptimistic<VoteState, void>(
-    { voted, score },
-    (state) => ({ voted: !state.voted, score: state.score + (state.voted ? -1 : 1) }),
-  );
+}: {
+  postId: string;
+  vote: Vote;
+  score: number;
+  signedIn: boolean;
+  className?: string;
+}) {
+  const [optimistic, setOptimistic] = useOptimistic<VoteState, 1 | -1>({ vote, score }, applyVote);
   const [pending, startTransition] = useTransition();
 
-  const classes = cn(
-    "relative z-10 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-sm font-medium tabular-nums transition-colors",
-    optimistic.voted
-      ? "bg-brand/10 text-brand hover:bg-brand/15"
-      : "text-muted-foreground hover:bg-muted hover:text-foreground",
+  const wrapper = cn(
+    "relative z-10 inline-flex items-center gap-0.5 rounded-full text-sm font-medium tabular-nums",
+    optimistic.vote === 1 && "bg-brand/10 text-brand",
+    optimistic.vote === -1 && "bg-indigo-50 text-indigo-600",
+    optimistic.vote === 0 && "text-muted-foreground",
     className,
-  );
-  const content = (
-    <>
-      <ArrowBigUp className={cn("size-5", optimistic.voted && "fill-current")} />
-      {optimistic.score}
-    </>
   );
 
   if (!signedIn) {
     return (
-      <SignInLink className={classes} title="Sign in to upvote">
-        {content}
+      <SignInLink className={cn(wrapper, "px-1 hover:bg-muted")} title="Sign in to vote">
+        <ArrowBigUp className="size-5" />
+        <span className="min-w-4 text-center">{optimistic.score}</span>
+        <ArrowBigDown className="size-5" />
       </SignInLink>
     );
   }
 
+  const vote_ = (value: 1 | -1) =>
+    startTransition(async () => {
+      setOptimistic(value);
+      const result = await castVote(postId, value);
+      if (!result.ok) alert(result.error);
+    });
+
   return (
-    <button
-      type="button"
-      className={classes}
-      aria-pressed={optimistic.voted}
-      aria-label={optimistic.voted ? "Remove upvote" : "Upvote"}
-      disabled={pending}
-      onClick={() =>
-        startTransition(async () => {
-          setOptimistic();
-          const result = await toggleVote(postId);
-          if (!result.ok) alert(result.error);
-        })
-      }
-    >
-      {content}
-    </button>
+    <div className={wrapper} role="group" aria-label="Vote">
+      <button
+        type="button"
+        className={cn(arrowClass, optimistic.vote !== 1 && "hover:bg-muted hover:text-brand")}
+        aria-pressed={optimistic.vote === 1}
+        aria-label={optimistic.vote === 1 ? "Remove upvote" : "Upvote"}
+        disabled={pending}
+        onClick={() => vote_(1)}
+      >
+        <ArrowBigUp className={cn("size-5", optimistic.vote === 1 && "fill-current")} />
+      </button>
+      <span className="min-w-4 text-center" aria-label={`Score ${optimistic.score}`}>
+        {optimistic.score}
+      </span>
+      <button
+        type="button"
+        className={cn(arrowClass, optimistic.vote !== -1 && "hover:bg-muted hover:text-indigo-600")}
+        aria-pressed={optimistic.vote === -1}
+        aria-label={optimistic.vote === -1 ? "Remove downvote" : "Downvote"}
+        disabled={pending}
+        onClick={() => vote_(-1)}
+      >
+        <ArrowBigDown className={cn("size-5", optimistic.vote === -1 && "fill-current")} />
+      </button>
+    </div>
   );
 }

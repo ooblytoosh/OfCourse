@@ -49,16 +49,6 @@ where u.domain = 'gatech.edu'
 on conflict (university_id, code) do update
   set slug = excluded.slug, name = excluded.name, description = excluded.description;
 
-insert into public.course_stats
-  (course_id, workload_hours_per_week, difficulty, would_take_again_pct, response_count, is_demo)
-select c.id, s.hours, s.difficulty, s.again, s.responses, true
-from public.courses c
-join (values
-  ('cs1332',   12.0, 7.4, 81, 214),
-  ('cs2110',   14.0, 7.9, 74, 168),
-  ('math1554',  8.0, 6.1, 77, 131)
-) as s (slug, hours, difficulty, again, responses) on s.slug = c.slug
-on conflict (course_id) do nothing;
 
 insert into public.topics (course_id, name)
 select c.id, t.name
@@ -618,11 +608,31 @@ on conflict (id) do nothing;
 -- ---------------------------------------------------------------------------
 
 insert into public.votes (post_id, user_id, value)
-select pg_temp.demo_id('e', p.n), pg_temp.demo_id('d', d.n), 1
+select pg_temp.demo_id('e', p.n), pg_temp.demo_id('d', d.n),
+       case when abs(hashtext(p.n::text || '-' || d.n::text)) % 100 < p.popularity then 1 else -1 end
 from demo_posts p
 cross join demo_users d
 where d.n <> p.author
-  and abs(hashtext(p.n::text || '-' || d.n::text)) % 100 < p.popularity
+  and (abs(hashtext(p.n::text || '-' || d.n::text)) % 100 < p.popularity
+       or abs(hashtext(p.n::text || '-' || d.n::text)) % 100 >= 96)
 on conflict (post_id, user_id) do nothing;
+
+-- ---------------------------------------------------------------------------
+-- Course ratings from the demo students who took each course. Spread around
+-- a typical value per course so the averages look like real survey data.
+-- ---------------------------------------------------------------------------
+
+insert into public.course_ratings (user_id, course_id, workload_hours, difficulty, would_take_again, semester)
+select m.user_id, m.course_id,
+       greatest(1, r.hours + (abs(hashtext(m.user_id::text || 'w')) % 7) - 3),
+       least(10, greatest(1, r.difficulty + (abs(hashtext(m.user_id::text || 'd')) % 5) - 2)),
+       abs(hashtext(m.user_id::text || 'a')) % 100 < r.again,
+       m.semester
+from public.course_members m
+join public.courses c on c.id = m.course_id
+join (values ('cs1332', 12, 8, 72), ('cs2110', 14, 8, 66), ('math1554', 8, 6, 70))
+  as r (slug, hours, difficulty, again) on r.slug = c.slug
+where m.user_id::text like 'd0000000-%'
+on conflict (user_id, course_id) do nothing;
 
 commit;

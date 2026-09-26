@@ -22,22 +22,26 @@ function text(formData: FormData, name: string): string {
   return typeof value === "string" ? value.trim() : "";
 }
 
-// Upvote a post, or remove the upvote if it's already there.
-export async function toggleVote(postId: string): Promise<ActionResult> {
+// Vote on a post. Voting the same way again removes the vote; voting the
+// other way switches it. The database keeps one vote per student per post.
+export async function castVote(postId: string, value: 1 | -1): Promise<ActionResult> {
+  if (value !== 1 && value !== -1) return { ok: false, error: "Invalid vote." };
   const user = await getCurrentUser();
   if (!user) return SIGN_IN_REQUIRED;
   const supabase = await createClient();
 
   const { data: existing } = await supabase
     .from("votes")
-    .select("id")
+    .select("id, value")
     .eq("post_id", postId)
     .eq("user_id", user.id)
     .maybeSingle();
 
-  const { error } = existing
-    ? await supabase.from("votes").delete().eq("id", existing.id)
-    : await supabase.from("votes").insert({ post_id: postId, user_id: user.id, value: 1 });
+  const { error } = !existing
+    ? await supabase.from("votes").insert({ post_id: postId, user_id: user.id, value })
+    : existing.value === value
+      ? await supabase.from("votes").delete().eq("id", existing.id)
+      : await supabase.from("votes").update({ value }).eq("id", existing.id);
 
   // A double click can race: the unique constraint keeps it to one vote.
   if (error && error.code !== UNIQUE_VIOLATION) {
@@ -367,6 +371,65 @@ export async function deleteComment(commentId: string): Promise<ActionResult> {
         .select("id")
     : await supabase.from("comments").delete().eq("id", commentId).eq("author_id", user.id).select("id");
   if (error || !data?.length) return { ok: false, error: "Couldn't delete the comment." };
+  refresh();
+  return { ok: true };
+}
+
+export type RatingFormState = { error?: string; saved?: boolean; attempt: number } | undefined;
+
+// Rate a course (or update your rating). Only averages are ever shown publicly.
+export async function rateCourse(_prev: RatingFormState, formData: FormData): Promise<RatingFormState> {
+  const reply = (rest: { error?: string; saved?: boolean }) => ({ ...rest, attempt: Date.now() });
+  const user = await getCurrentUser();
+  if (!user) return reply({ error: "Sign in to rate this course." });
+
+  const courseId = text(formData, "courseId");
+  const workload = Number(text(formData, "workloadHours"));
+  const difficulty = Number(text(formData, "difficulty"));
+  const again = text(formData, "wouldTakeAgain");
+  const semester = text(formData, "semester");
+
+  if (!Number.isInteger(workload) || workload < 0 || workload > 60) {
+    return reply({ error: "Enter your weekly hours (0–60)." });
+  }
+  if (!Number.isInteger(difficulty) || difficulty < 1 || difficulty > 10) {
+    return reply({ error: "Choose a difficulty from 1 to 10." });
+  }
+  if (again !== "yes" && again !== "no") return reply({ error: "Would you take it again?" });
+  if (semester && !isValidSemester(semester)) return reply({ error: "Choose a valid semester." });
+
+  const supabase = await createClient();
+  const rating = {
+    workload_hours: workload,
+    difficulty,
+    would_take_again: again === "yes",
+    semester: semester || null,
+  };
+  const { data: existing } = await supabase
+    .from("course_ratings")
+    .select("course_id")
+    .eq("course_id", courseId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const { error } = existing
+    ? await supabase.from("course_ratings").update(rating).eq("course_id", courseId).eq("user_id", user.id)
+    : await supabase.from("course_ratings").insert({ ...rating, course_id: courseId, user_id: user.id });
+  if (error) return reply({ error: "Couldn't save your rating. Try again." });
+
+  refresh();
+  return reply({ saved: true });
+}
+
+export async function removeRating(courseId: string): Promise<ActionResult> {
+  const user = await getCurrentUser();
+  if (!user) return SIGN_IN_REQUIRED;
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("course_ratings")
+    .delete()
+    .eq("course_id", courseId)
+    .eq("user_id", user.id);
+  if (error) return { ok: false, error: "Couldn't remove your rating." };
   refresh();
   return { ok: true };
 }

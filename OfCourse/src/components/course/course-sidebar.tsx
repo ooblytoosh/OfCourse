@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { RateCourse } from "@/components/course/rate-course";
 import type { CourseDetail, Topic } from "@/lib/data/courses";
 import { formatCount, slugify } from "@/lib/format";
 
@@ -21,7 +22,17 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function CourseSidebar({ course, topics }: { course: CourseDetail; topics: Topic[] }) {
+export function CourseSidebar({
+  course,
+  topics,
+  signedIn,
+  semesters,
+}: {
+  course: CourseDetail;
+  topics: Topic[];
+  signedIn: boolean;
+  semesters: string[];
+}) {
   const popular = topics.filter((t) => t.postCount > 0).slice(0, 6);
 
   return (
@@ -59,20 +70,31 @@ export function CourseSidebar({ course, topics }: { course: CourseDetail; topics
         </Section>
       )}
 
-      {course.stats && (
-        <Section title="Course stats">
-          <dl className="flex flex-col gap-1.5">
-            <Stat label="Typical workload" value={`${course.stats.workloadHoursPerWeek} hrs/week`} />
-            <Stat label="Difficulty" value={`${course.stats.difficulty.toFixed(1)} / 10`} />
-            <Stat label="Would take again" value={`${course.stats.wouldTakeAgainPct}%`} />
-          </dl>
-          <p className="mt-3 text-xs text-muted-foreground">
-            Averaged from {formatCount(course.stats.responseCount, "student report")}.
-            {course.stats.isDemo && " Demo data for this preview."} These are student
-            opinions, not an OfCourse rating.
-          </p>
-        </Section>
-      )}
+      <Section title="Course stats">
+        {course.stats ? (
+          <>
+            <dl className="flex flex-col gap-1.5">
+              <Stat label="Typical workload" value={`${course.stats.workloadHoursPerWeek} hrs/week`} />
+              <Stat label="Difficulty" value={`${course.stats.difficulty.toFixed(1)} / 10`} />
+              <Stat label="Would take again" value={`${course.stats.wouldTakeAgainPct}%`} />
+            </dl>
+            <p className="mt-3 text-xs text-muted-foreground">
+              Averaged from {formatCount(course.stats.ratingCount, "student rating")}. These are
+              students&apos; opinions, not an OfCourse rating.
+            </p>
+          </>
+        ) : (
+          <p className="text-sm text-muted-foreground">No ratings yet. Took this course? Be the first.</p>
+        )}
+        <div className="mt-3 border-t pt-3">
+          <RateCourse
+            courseId={course.id}
+            signedIn={signedIn}
+            rating={course.viewerRating}
+            semesters={semesters}
+          />
+        </div>
+      </Section>
 
       <p className="px-1 text-xs text-muted-foreground">
         Share only your own work.{" "}

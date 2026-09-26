@@ -74,7 +74,7 @@ export default async function PostPage({ params }: PageProps<"/c/[slug]/posts/[p
         <div className="mt-6 -ml-2.5 flex items-center gap-1 border-t pt-3">
           <VoteButton
             postId={post.id}
-            voted={post.viewerHasVoted}
+            vote={post.viewerVote}
             score={post.voteScore}
             signedIn={signedIn}
           />

@@ -40,7 +40,8 @@ export type PostSummary = {
   author: Author | null;
   course: { slug: string; code: string; name: string };
   topics: { id: string; name: string }[];
-  viewerHasVoted: boolean;
+  // The viewer's vote: 1 (up), -1 (down) or 0.
+  viewerVote: -1 | 0 | 1;
   viewerHasSaved: boolean;
 };
 
@@ -69,16 +70,16 @@ type PostRow = {
 // Adds whether the viewer has upvoted/saved each post.
 async function withViewerState(rows: PostRow[], viewerId?: string): Promise<PostSummary[]> {
   const ids = rows.map((r) => r.id);
-  let voted = new Set<string>();
+  let votes = new Map<string, -1 | 1>();
   let saved = new Set<string>();
 
   if (viewerId && ids.length > 0) {
     const supabase = await createClient();
-    const [votes, bookmarks] = await Promise.all([
-      supabase.from("votes").select("post_id").eq("user_id", viewerId).in("post_id", ids),
+    const [voteRows, bookmarks] = await Promise.all([
+      supabase.from("votes").select("post_id, value").eq("user_id", viewerId).in("post_id", ids),
       supabase.from("bookmarks").select("post_id").eq("user_id", viewerId).in("post_id", ids),
     ]);
-    voted = new Set((votes.data ?? []).map((v) => v.post_id));
+    votes = new Map((voteRows.data ?? []).map((v) => [v.post_id, v.value > 0 ? 1 : -1] as const));
     saved = new Set((bookmarks.data ?? []).map((b) => b.post_id));
   }
 
@@ -95,7 +96,7 @@ async function withViewerState(rows: PostRow[], viewerId?: string): Promise<Post
     author: toAuthor(r.author),
     course: r.course,
     topics: [...r.topics].sort((a, b) => a.name.localeCompare(b.name)),
-    viewerHasVoted: voted.has(r.id),
+    viewerVote: votes.get(r.id) ?? 0,
     viewerHasSaved: saved.has(r.id),
   }));
 }

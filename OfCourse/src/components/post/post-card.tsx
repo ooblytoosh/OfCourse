@@ -64,7 +64,7 @@ export function PostCard({
       <div className="mt-3 -ml-2.5 flex items-center gap-1">
         <VoteButton
           postId={post.id}
-          voted={post.viewerHasVoted}
+          vote={post.viewerVote}
           score={post.voteScore}
           signedIn={signedIn}
         />
