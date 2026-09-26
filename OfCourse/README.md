@@ -3,154 +3,139 @@
 **Learn from the students who took it.**
 
 OfCourse is a student-powered knowledge network for university courses. Every
-course gets a community where students share their own notes, study guides,
-explanations, advice and experiences.
+course has a community where students share their **own** notes, explanations,
+study guides, advice and experiences. AI then helps you search and understand
+that student knowledge, always linking back to the posts and the students who
+wrote them.
 
 ## Stack
 
-Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · shadcn/ui ·
-Supabase (Postgres, Auth, Storage) · Vercel
+Next.js 16 (App Router, Server Actions) · React 19 · TypeScript · Tailwind CSS 4
+· shadcn/ui · Supabase (Postgres + pgvector, Auth, Storage) · OpenAI · Vercel
 
-## Getting started
+## Run it locally
 
 ```bash
 npm install
-cp .env.example .env.local   # then fill in your Supabase keys
+cp .env.example .env.local   # fill in the values below
 npm run dev                  # http://localhost:3000
 ```
 
-The app runs without Supabase keys. Sign-in is disabled and a setup notice
-is shown until they're provided.
+### Environment variables (`.env.local`)
 
-### Supabase setup
+| Variable | Required | Where it comes from |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | yes | Supabase → Connect (Project URL) |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | yes | Supabase → Project Settings → API Keys (publishable; the legacy `NEXT_PUBLIC_SUPABASE_ANON_KEY` also works) |
+| `OPENAI_API_KEY` | for AI search | platform.openai.com → API keys |
+| `SUPABASE_SERVICE_ROLE_KEY` | for AI search | Supabase → API Keys → **secret** key. Server-only; never share it |
+| `NEXT_PUBLIC_SITE_URL` | in production | Your deployed URL, used in auth email links |
+| `OPENAI_CHAT_MODEL`, `OPENAI_EMBEDDING_MODEL`, `AI_MIN_SIMILARITY`, `AI_HOURLY_LIMIT` | no | Overrides (defaults in `src/lib/ai/config.ts`) |
+
+`.env.local` is git-ignored. Without the two AI keys everything else works and
+the AI panel says AI search isn't set up.
+
+### Supabase setup (once per project)
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. Put the project URL and publishable key in `.env.local`.
-3. Apply the schema and demo data. In the **SQL editor**, run each file in
-   `supabase/migrations/` in order, then `supabase/seed.sql`. (With the CLI:
-   `npx supabase link --project-ref <ref>`, `npm run db:push`, then run
-   `seed.sql` in the SQL editor.) The seed is safe to re-run.
-4. In **Authentication → URL Configuration**, set the Site URL
+2. In the **SQL Editor**, run each file in `supabase/migrations/` **in order**,
+   then `supabase/seed.sql` (demo data; safe to re-run).
+3. **Authentication → URL Configuration:** set the Site URL
    (`http://localhost:3000` locally) and add `<site-url>/auth/confirm` to the
    Redirect URLs.
-5. Optional: regenerate DB types after schema changes with `npm run db:types`.
+4. **Authentication → Sign In / Providers → Email:** keep **Confirm email** on
+   so signing up with a university email verifies the student.
+5. Generate AI search embeddings for the seeded posts:
 
-### University verification
+   ```bash
+   npm run embed:posts            # skips posts that are already up to date
+   ```
 
-Students are "university verified" once they prove they control an email
-address at a university's domain (`universities.domain`, e.g. `gatech.edu`).
-The proof always comes from Supabase Auth:
+   (If you skip this, each course's posts are embedded on its first AI search.)
 
-- **Confirm email ON (recommended):** signing up with a `@gatech.edu` address
-  and clicking the confirmation link verifies the student.
-- **Confirm email OFF:** new accounts sign in right away but start unverified;
-  they verify from **Settings → University verification**, which emails a
-  sign-in link.
+## Demo
 
-Clients can never set `verified` or `university_id` themselves (column
-permissions + a guard trigger). Supported universities (and their email
-domains) live in the `universities` table; `seed.sql` adds 15, and students at
-other schools can still sign up unverified. See
-`supabase/migrations/20260927000000_profiles_verification.sql`. Supabase's
-built-in email sender is rate-limited (a few emails per hour); add custom SMTP
-under Authentication → Emails for anything beyond a demo.
+Seeded data: Georgia Tech with **CS 1332** (24 posts), CS 2110 and MATH 1554,
+30 fictional verified demo students (no passwords; nobody can sign in as them),
+comments, up/down votes and course ratings. All content is original and
+fictional, not real course material.
+
+For the demo, use your own account and verify it with a `@gatech.edu` email
+(sign up with it, or **Settings → University verification**), so your posts
+show the verified badge.
+
+**Golden path (2–3 min):** home page → search "CS 1332" → open c/cs1332 → Hot /
+New / Top and the **Trees** filter → open a post → click the author → back to
+CS 1332 → ask *"I'm struggling with AVL rotations. Can someone explain why they
+work?"* → read the synthesis → click a source → open the contributor's profile.
+
+## Features
+
+- **Course communities** (`/c/cs1332`): join, Hot/New/Top, topic filters,
+  keyword filter, course ratings (averages only), up/down votes, saves.
+- **Posts:** types (discussion, study advice, notes, study guide, concept
+  explanation), topics, semester, required academic-integrity confirmation,
+  two-level comments, edit/delete your own posts and comments.
+- **Profiles** (`/u/<username>`): contributions, courses, helpful votes, photo,
+  university badge.
+- **University verification:** the university is derived from an email the
+  student proved they own via Supabase Auth. Clients can never set `verified`
+  or `university_id` (column permissions + a guard trigger).
+- **AI search ("Ask the student knowledge")**: course-scoped retrieval over
+  student posts, then a short synthesis citing them.
+
+## AI search architecture
+
+```
+post saved ──► embedding ──► post_embeddings (pgvector 1536, per course)
+question ──► embedding ──► match_course_posts(course_id) ──► posts ≥ 0.5 similarity
+         ──► OpenAI chat model ──► answer with [S1] citations ──► source cards
+```
+
+- Models: `text-embedding-3-small` (1536 dimensions, matching the
+  `vector(1536)` column) and `gpt-5.4-mini`.
+- Answers come only from the retrieved posts. If they don't cover the
+  question, the answer says so and makes no general-knowledge claims; if no
+  post is relevant, no AI call is made at all.
+- Sources are the database records that were retrieved. The model only cites
+  them by number; the app builds the links, drops unknown numbers and strips
+  any URL the model writes.
+- New/edited posts are re-embedded in the background only when their text
+  changes. Signed-in students only; 30 questions per student per hour.
 
 ## Scripts
 
-| Command             | What it does                                       |
-| ------------------- | -------------------------------------------------- |
-| `npm run dev`       | Start the dev server                               |
-| `npm run build`     | Production build                                   |
-| `npm run lint`      | ESLint                                             |
-| `npm run typecheck` | TypeScript check                                   |
-| `npm run db:push`   | Push migrations to the linked Supabase project     |
-| `npm run db:types`  | Regenerate `src/lib/database.types.ts`             |
-| `npm run embed:posts` | Generate AI search embeddings for posts          |
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Dev server |
+| `npm run build` / `npm start` | Production build / serve |
+| `npm run lint` · `npm run typecheck` | ESLint · TypeScript |
+| `npm run embed:posts [-- <course-slug>]` | Generate AI search embeddings |
+| `npm run db:push` · `npm run db:types` | Supabase CLI: push migrations · regenerate types |
 
 ## Project layout
 
 ```
 src/
-  app/
-    (app)/            App shell (header + sidebar): home, courses, saved, new, settings, guidelines
-      c/[slug]/       Course community feed (/c/cs1332) and post pages (/c/cs1332/posts/<id>)
-      u/[handle]/     Student profiles (/u/alexchen); /profile redirects to your own
-    (auth)/           Sign in / sign up pages and auth server actions
-    auth/confirm/     Handles links from Supabase auth emails
-  components/
-    layout/           Header, nav, logo
-    ui/               shadcn/ui components
-  lib/
-    actions/          Server actions: vote, save, join, comment, create post, profile, verification
-    data/             Read queries for courses, posts, comments, profiles
-    ai/               AI search: config, embeddings, retrieval + synthesis
-    supabase/         Browser, server, proxy and service-role Supabase clients
-    auth.ts           getCurrentUser / requireUser
-    content-policy.ts Allowed post types, prohibited content, integrity attestation
-    database.types.ts Typed schema
-  proxy.ts            Refreshes the Supabase session on each request
+  app/(app)/        App shell: home, courses, c/[slug] (course + posts), u/[handle], saved, new, settings
+  app/(auth)/       Sign in / sign up
+  app/auth/confirm/ Supabase email link handler (also claims university verification)
+  components/       UI (shadcn/ui in components/ui)
+  lib/actions/      Server actions (posts, comments, votes, saves, ratings, profile, AI)
+  lib/data/         Read queries
+  lib/ai/           AI search: config, embeddings, retrieval, synthesis
+  lib/supabase/     Browser, server, proxy and service-role clients
 supabase/
-  migrations/         SQL schema
-  seed.sql            Georgia Tech courses + fictional demo students, posts, comments and votes
+  migrations/       Schema, RLS policies, functions (run in order)
+  seed.sql          Demo data
+scripts/
+  embed-posts.ts    Embedding backfill
 ```
-
-## Votes and course ratings
-
-Posts take one up- or downvote per student (`votes.value` is 1 or -1; a
-trigger keeps `posts.vote_score` in sync). Students rate a course once
-(workload, difficulty, would take again) in `course_ratings`; individual
-ratings are private and the `course_rating_stats` view exposes only averages.
-
-## AI search (student knowledge)
-
-Every course page has **Ask the student knowledge**: a question is answered
-only from that course's student posts, with links to the posts it used.
-
-```
-post saved ──► embedding (OpenAI) ──► post_embeddings (pgvector, 1536 dims)
-question ──► embedding ──► match_course_posts(course_id) ──► top posts
-         ──► OpenAI chat model ──► answer with [S1] citations ──► source cards
-```
-
-- Models live in `src/lib/ai/config.ts`: `text-embedding-3-small` (1536
-  dimensions, matching the `vector(1536)` column) and `gpt-5.4-mini` for
-  answers. Override with `OPENAI_EMBEDDING_MODEL` / `OPENAI_CHAT_MODEL`.
-- Sources are always the database records that were retrieved. The model only
-  cites them by number; the app builds the links, drops unknown numbers and
-  strips any URL the model writes.
-- New and edited posts are embedded in the background after saving (only when
-  their text changed). Posts without an embedding are indexed the first time
-  someone searches their course.
-- Signed-in students only; 30 questions per student per hour
-  (`AI_HOURLY_LIMIT`). Keys stay on the server.
-
-**Setup:** add `OPENAI_API_KEY` and `SUPABASE_SERVICE_ROLE_KEY` to
-`.env.local` (see `.env.example`), then embed existing posts:
-
-```bash
-npm run embed:posts            # all posts (skips ones already up to date)
-npm run embed:posts -- cs1332  # one course
-```
-
-## Profile photos
-
-Photos upload to the public `avatars` Storage bucket (created by the
-migrations) at `avatars/<user id>/…`. Storage policies only let students write
-inside their own folder; uploads are limited to PNG/JPG/WebP/GIF up to 2 MB.
-
-## Demo data
-
-`supabase/seed.sql` creates 30 fictional students (on the reserved
-`ofcourse.example` domain, with no passwords, shown as verified Georgia Tech
-students for the demo) and original demo posts,
-comments and votes: 22 posts in CS 1332, plus a few in CS 2110 and MATH 1554.
-Course stats in the sidebar are averages of student ratings (the demo students
-rate the courses they're in). None of it is copied from real course materials.
 
 ## Content policy
 
-OfCourse is for students' **own** original work. Exams, unreleased exam
-questions, answer keys, current assignment solutions, professor slides or
-study guides, textbook PDFs, lecture recordings and other restricted materials
-are prohibited. Every post must store an academic-integrity attestation
-(`posts.integrity_attested_at` is required by the database).
+OfCourse is for students' own original work. Exams, unreleased exam questions,
+answer keys, current assignment solutions, professor slides or study guides,
+textbook PDFs, lecture recordings and other restricted materials are
+prohibited. Every post requires an academic-integrity confirmation, stored in
+`posts.integrity_attested_at` (required by the database).
