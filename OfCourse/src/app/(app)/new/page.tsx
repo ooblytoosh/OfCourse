@@ -38,7 +38,7 @@ export default async function NewPostPage({ searchParams }: PageProps<"/new">) {
           <ul className="mt-2 space-y-1.5">
             {POSTABLE_TYPES.map((type) => (
               <li key={type} className="flex gap-2">
-                <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" />
+                <Check className="mt-0.5 size-4 shrink-0 text-good" />
                 {POST_TYPES[type].label}
               </li>
             ))}

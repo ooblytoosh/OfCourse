@@ -5,12 +5,12 @@ import { notFound, redirect } from "next/navigation";
 
 import { CommentForm } from "@/components/post/comment-form";
 import { CommentThread } from "@/components/post/comment-thread";
-import { HelpfulButton } from "@/components/post/helpful-button";
 import { PostMeta } from "@/components/post/post-meta";
 import { PostOwnerActions } from "@/components/post/post-owner-actions";
 import { PostTypeBadge } from "@/components/post/post-type-badge";
 import { SaveButton } from "@/components/post/save-button";
 import { TopicChip } from "@/components/post/topic-chip";
+import { UpvoteButton } from "@/components/post/upvote-button";
 import { getCurrentUser } from "@/lib/auth";
 import { getComments, getPost } from "@/lib/data/posts";
 import { formatCount } from "@/lib/format";
@@ -71,10 +71,10 @@ export default async function PostPage({ params }: PageProps<"/c/[slug]/posts/[p
 
         <div className="mt-6 text-[0.95rem] leading-7 whitespace-pre-line">{post.content}</div>
 
-        <div className="mt-6 -ml-2.5 flex flex-wrap items-center gap-1 border-t pt-3">
-          <HelpfulButton
+        <div className="mt-6 flex flex-wrap items-center gap-1 border-t pt-4">
+          <UpvoteButton
             postId={post.id}
-            marked={post.viewerFoundHelpful}
+            voted={post.viewerFoundHelpful}
             count={post.voteScore}
             signedIn={signedIn}
           />

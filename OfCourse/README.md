@@ -79,20 +79,22 @@ show the verified badge.
 from the email → **Welcome** screen (intro + terms; "Agree and continue" unlocks
 once the box is checked) → home.
 
-**Golden path (2–3 min):** home page → search "CS 1332" → open the course (stats
-banner, **Course Reviews & Stats**) → **Resources & Topics** by unit → open a post
+**Golden path (2–3 min):** home page → search "CS 1332" → open the course (stat cards, **Course Reviews & Stats**) → **Resources & Topics** by unit → open a post
 → click the author → back to CS 1332 → ask *"I'm struggling with AVL rotations.
 Can someone explain why they work?"* → read the synthesis → click a source → open
 the contributor's profile.
 
 ## Features
 
-- **Course pages** (`/c/cs1332`): title with a stats banner (workload,
-  difficulty, would take again, verified students) and three tabs:
-  **Course Reviews & Stats** (rate the course; written reviews),
-  **Study Threads & Advice** (Hot / New / Most helpful) and **Resources &
-  Topics** (notes, guides and explanations organized by syllabus unit). Topic
-  filters are grouped by unit; posts can be marked **Helpful** and saved.
+- **Look and feel:** dark mode by default with a light/dark toggle in the
+  header (remembered per browser), neutral colors, monochrome post-type badges.
+- **Course pages** (`/c/cs1332`): title, university and student count; three
+  color-coded stat cards (workload, difficulty, would take again: green →
+  yellow → red); the **Ask the student knowledge** AI bar; three tabs,
+  **Course Reviews & Stats** (rate the course; written reviews), **Study
+  Threads & Advice** (Hot / New / Top) and **Resources & Topics** (by syllabus
+  unit); and a **course syllabus** sidebar whose topics filter the resources.
+  Posts can be upvoted (one per student) and saved.
 - **Posts:** types (discussion, study advice, notes, study guide, concept
   explanation, course review), topics, semester, required academic-integrity
   confirmation, two-level comments, edit/delete your own posts and comments.

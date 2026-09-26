@@ -21,11 +21,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <>
       <SiteHeader />
       <div className="border-b md:hidden">
-        <div className="mx-auto max-w-6xl overflow-x-auto px-4 py-2">
+        <div className="mx-auto max-w-7xl overflow-x-auto px-4 py-2">
           <NavLinks orientation="horizontal" />
         </div>
       </div>
-      <div className="mx-auto flex w-full max-w-6xl flex-1 gap-8 px-4">
+      <div className="mx-auto flex w-full max-w-7xl flex-1 gap-8 px-4">
         <aside className="hidden w-52 shrink-0 md:block">
           <div className="sticky top-14 flex flex-col gap-6 py-6">
             <NavLinks orientation="vertical" />

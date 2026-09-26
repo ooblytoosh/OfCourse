@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { ButtonLink } from "@/components/button-link";
 import { Logo } from "@/components/layout/logo";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { getCurrentUser } from "@/lib/auth";
@@ -23,11 +24,11 @@ export async function SiteHeader() {
     (user?.user_metadata?.name as string | undefined) ?? user?.email ?? "";
 
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4">
+    <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-md">
+      <div className="mx-auto flex h-14 max-w-7xl items-center gap-3 px-4">
         <Logo compact className="shrink-0" />
 
-        {/* Course search. Submits to /courses; results arrive in Phase 2. */}
+        {/* Global course search. */}
         <form action="/courses" role="search" className="relative mx-auto w-full max-w-md">
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -35,12 +36,13 @@ export async function SiteHeader() {
             name="q"
             placeholder="Search courses..."
             aria-label="Search courses"
-            className="h-9 rounded-full bg-muted pl-9"
+            className="h-9 rounded-lg border-transparent bg-muted pl-9 focus-visible:border-ring"
           />
         </form>
 
-        <div className="flex shrink-0 items-center gap-2">
-          <ButtonLink href="/new" size="lg" className="rounded-full px-3.5">
+        <div className="flex shrink-0 items-center gap-1.5">
+          <ThemeToggle />
+          <ButtonLink href="/new" size="lg" className="rounded-lg px-3">
             <Plus />
             <span className="hidden sm:inline">New Post</span>
           </ButtonLink>
@@ -51,7 +53,7 @@ export async function SiteHeader() {
               </Avatar>
             </Link>
           ) : (
-            <ButtonLink href="/login" variant="outline" size="lg" className="rounded-full px-3.5">
+            <ButtonLink href="/login" variant="outline" size="lg" className="rounded-lg px-3">
               Sign in
             </ButtonLink>
           )}

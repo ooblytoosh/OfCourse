@@ -3,7 +3,7 @@ import Link from "next/link";
 import { COURSE_TAB_ORDER, COURSE_TABS, type CourseTab } from "@/lib/content-policy";
 import { cn } from "@/lib/utils";
 
-// Segmented switcher between the course's three sections.
+// Underlined tabs for the course's three sections.
 export function CourseTabs({
   slug,
   active,
@@ -14,8 +14,8 @@ export function CourseTabs({
   counts: Record<CourseTab, number>;
 }) {
   return (
-    <nav aria-label="Course sections" className="max-w-full overflow-x-auto">
-      <ul className="inline-flex min-w-max gap-1 rounded-xl bg-muted p-1">
+    <nav aria-label="Course sections" className="max-w-full overflow-x-auto border-b">
+      <ul className="flex min-w-max gap-5">
         {COURSE_TAB_ORDER.map((tab) => {
           const isActive = tab === active;
           return (
@@ -25,14 +25,19 @@ export function CourseTabs({
                 aria-current={isActive ? "page" : undefined}
                 scroll={false}
                 className={cn(
-                  "flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium transition-all duration-200",
+                  "-mb-px flex items-center gap-2 border-b-2 py-2.5 text-sm font-medium transition-colors duration-200",
                   isActive
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
+                    ? "border-foreground text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground",
                 )}
               >
                 {COURSE_TABS[tab].label}
-                <span className={cn("text-xs tabular-nums", isActive ? "text-brand" : "opacity-70")}>
+                <span
+                  className={cn(
+                    "rounded-md px-1.5 py-0.5 text-xs tabular-nums",
+                    isActive ? "bg-foreground text-background" : "bg-muted",
+                  )}
+                >
                   {counts[tab]}
                 </span>
               </Link>

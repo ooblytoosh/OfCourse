@@ -22,7 +22,7 @@ export function SaveButton({
   const [error, flashError] = useFlashError();
 
   const classes = cn(
-    "relative z-10 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm font-medium transition-colors",
+    "relative z-10 inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm font-medium transition-colors",
     optimisticSaved
       ? "text-foreground hover:bg-muted"
       : "text-muted-foreground hover:bg-muted hover:text-foreground",
