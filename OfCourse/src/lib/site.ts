@@ -1,4 +1,4 @@
-import { Bookmark, Home, LibraryBig, type LucideIcon } from "lucide-react";
+import { Bookmark, Home, LibraryBig, UserRound, type LucideIcon } from "lucide-react";
 
 export const siteConfig = {
   name: "OfCourse",
@@ -13,6 +13,7 @@ export const mainNav: NavItem[] = [
   { href: "/", label: "Home", icon: Home },
   { href: "/courses", label: "Courses", icon: LibraryBig },
   { href: "/saved", label: "Saved", icon: Bookmark },
+  { href: "/profile", label: "Profile", icon: UserRound },
 ];
 
 // Base URL used in auth emails. Falls back to the request origin when unset.

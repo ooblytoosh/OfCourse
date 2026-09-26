@@ -7,7 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { createPost, type PostFormState } from "@/lib/actions/community";
+import {
+  createPost,
+  updatePost,
+  type PostFormState,
+  type PostFormValues,
+} from "@/lib/actions/community";
 import {
   ACADEMIC_INTEGRITY_ATTESTATION,
   POST_LIMITS,
@@ -40,10 +45,15 @@ type ComposerProps = {
   courses: ComposerCourse[];
   semesters: string[];
   initialCourseId?: string;
+  // Editing an existing post: its id and current values. The course is fixed.
+  editing?: { postId: string; values: PostFormValues };
 };
 
 export function PostComposer(props: ComposerProps) {
-  const [state, action, pending] = useActionState<PostFormState, FormData>(createPost, undefined);
+  const [state, action, pending] = useActionState<PostFormState, FormData>(
+    props.editing ? updatePost : createPost,
+    undefined,
+  );
   // Remount the fields after every server response so each uncontrolled input
   // starts from the submitted values. (React resets forms after an action, and
   // a <select> wouldn't pick up a changed defaultValue on its own.)
@@ -62,6 +72,7 @@ function ComposerForm({
   courses,
   semesters,
   initialCourseId,
+  editing,
   state,
   action,
   pending,
@@ -71,7 +82,8 @@ function ComposerForm({
   pending: boolean;
 }) {
   const errors = state?.errors ?? {};
-  const values = state?.values;
+  // Integrity must be re-confirmed on every save, so edits start unchecked.
+  const values = state?.values ?? (editing && { ...editing.values, integrity: false });
 
   const defaultCourseId = values?.courseId ?? initialCourseId ?? "";
   const [courseId, setCourseId] = useState(defaultCourseId);
@@ -80,6 +92,7 @@ function ComposerForm({
 
   return (
     <form action={action} className="flex flex-col gap-5" noValidate>
+      {editing && <input type="hidden" name="postId" value={editing.postId} />}
       {errors.form && (
         <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive" role="alert">
           {errors.form}
@@ -89,23 +102,32 @@ function ComposerForm({
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="flex flex-col gap-2">
           <Label htmlFor="courseId">Course</Label>
-          <select
-            id="courseId"
-            name="courseId"
-            defaultValue={defaultCourseId}
-            onChange={(e) => setCourseId(e.target.value)}
-            aria-invalid={Boolean(errors.courseId)}
-            className={selectClass}
-          >
-            <option value="" disabled>
-              Choose a course
-            </option>
-            {courses.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.code}: {c.name} ({c.university})
+          {editing ? (
+            <>
+              <input type="hidden" name="courseId" value={defaultCourseId} />
+              <p id="courseId" className="flex h-9 items-center rounded-lg bg-muted px-2.5 text-sm">
+                {course ? `${course.code}: ${course.name}` : "This course"}
+              </p>
+            </>
+          ) : (
+            <select
+              id="courseId"
+              name="courseId"
+              defaultValue={defaultCourseId}
+              onChange={(e) => setCourseId(e.target.value)}
+              aria-invalid={Boolean(errors.courseId)}
+              className={selectClass}
+            >
+              <option value="" disabled>
+                Choose a course
               </option>
-            ))}
-          </select>
+              {courses.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.code}: {c.name} ({c.university})
+                </option>
+              ))}
+            </select>
+          )}
           <FieldError message={errors.courseId} />
         </div>
 
@@ -242,10 +264,12 @@ function ComposerForm({
 
       <div className="flex items-center justify-end gap-3">
         {!integrity && (
-          <span className="text-sm text-muted-foreground">Confirm academic integrity to publish</span>
+          <span className="text-sm text-muted-foreground">
+            Confirm academic integrity to {editing ? "save" : "publish"}
+          </span>
         )}
         <Button type="submit" size="lg" className="px-5" disabled={pending || !integrity}>
-          {pending ? "Publishing…" : "Publish"}
+          {pending ? (editing ? "Saving…" : "Publishing…") : editing ? "Save changes" : "Publish"}
         </Button>
       </div>
     </form>

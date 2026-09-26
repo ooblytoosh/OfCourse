@@ -55,31 +55,38 @@ export type Database = {
           },
         ];
       };
-      course_stats: {
+      course_ratings: {
         Row: {
+          user_id: string;
           course_id: string;
-          workload_hours_per_week: number;
+          workload_hours: number;
           difficulty: number;
-          would_take_again_pct: number;
-          response_count: number;
-          is_demo: boolean;
+          would_take_again: boolean;
+          semester: string | null;
+          created_at: string;
           updated_at: string;
         };
         Insert: {
+          user_id: string;
           course_id: string;
-          workload_hours_per_week: number;
+          workload_hours: number;
           difficulty: number;
-          would_take_again_pct: number;
-          response_count: number;
-          is_demo?: boolean;
-          updated_at?: string;
+          would_take_again: boolean;
+          semester?: string | null;
         };
-        Update: Partial<Database["public"]["Tables"]["course_stats"]["Insert"]>;
+        Update: Partial<Database["public"]["Tables"]["course_ratings"]["Insert"]>;
         Relationships: [
           {
-            foreignKeyName: "course_stats_course_id_fkey";
+            foreignKeyName: "course_ratings_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "course_ratings_course_id_fkey";
             columns: ["course_id"];
-            isOneToOne: true;
+            isOneToOne: false;
             referencedRelation: "courses";
             referencedColumns: ["id"];
           },
@@ -96,6 +103,7 @@ export type Database = {
           bio: string | null;
           avatar_url: string | null;
           verified: boolean;
+          verified_at: string | null;
           updated_at: string;
         } & Timestamps;
         Insert: {
@@ -108,6 +116,7 @@ export type Database = {
           bio?: string | null;
           avatar_url?: string | null;
           verified?: boolean;
+          verified_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -205,6 +214,7 @@ export type Database = {
           author_id: string;
           parent_comment_id: string | null;
           content: string;
+          deleted_at: string | null;
           updated_at: string;
         } & Timestamps;
         Insert: {
@@ -213,6 +223,7 @@ export type Database = {
           author_id: string;
           parent_comment_id?: string | null;
           content: string;
+          deleted_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -325,8 +336,22 @@ export type Database = {
         ];
       };
     };
-    Views: { [_ in never]: never };
-    Functions: { [_ in never]: never };
+    Views: {
+      course_rating_stats: {
+        Row: {
+          course_id: string;
+          rating_count: number;
+          avg_workload_hours: number;
+          avg_difficulty: number;
+          would_take_again_pct: number;
+        };
+        Relationships: [];
+      };
+    };
+    Functions: {
+      claim_university_verification: { Args: never; Returns: string | null };
+      university_for_email: { Args: { email: string }; Returns: string | null };
+    };
     Enums: {
       post_type:
         | "note"

@@ -13,6 +13,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getCourse, getCourseTopics } from "@/lib/data/courses";
 import { FEED_SORTS, getCourseFeed, type FeedSort } from "@/lib/data/posts";
 import { slugify } from "@/lib/format";
+import { semesterOptions } from "@/lib/semesters";
 
 export async function generateMetadata({ params }: PageProps<"/c/[slug]">): Promise<Metadata> {
   const { slug } = await params;
@@ -93,7 +94,12 @@ export default async function CoursePage({ params, searchParams }: PageProps<"/c
         </div>
 
         <aside>
-          <CourseSidebar course={course} topics={topics} />
+          <CourseSidebar
+            course={course}
+            topics={topics}
+            signedIn={Boolean(user)}
+            semesters={semesterOptions()}
+          />
         </aside>
       </div>
     </div>

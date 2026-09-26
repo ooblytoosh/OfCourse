@@ -81,13 +81,21 @@ export type CourseDetail = {
   memberCount: number;
   postCount: number;
   viewerIsMember: boolean;
+  // Averages of student ratings, or null when nobody has rated the course.
   stats: {
     workloadHoursPerWeek: number;
     difficulty: number;
     wouldTakeAgainPct: number;
-    responseCount: number;
-    isDemo: boolean;
+    ratingCount: number;
   } | null;
+  viewerRating: CourseRating | null;
+};
+
+export type CourseRating = {
+  workloadHours: number;
+  difficulty: number;
+  wouldTakeAgain: boolean;
+  semester: string | null;
 };
 
 type CourseDetailRow = {
@@ -97,13 +105,6 @@ type CourseDetailRow = {
   name: string;
   description: string | null;
   university: { name: string; short_name: string | null } | null;
-  stats: {
-    workload_hours_per_week: number;
-    difficulty: number;
-    would_take_again_pct: number;
-    response_count: number;
-    is_demo: boolean;
-  } | null;
 };
 
 export async function getCourse(slug: string, viewerId?: string): Promise<CourseDetail | null> {
@@ -111,21 +112,29 @@ export async function getCourse(slug: string, viewerId?: string): Promise<Course
   const { data: course, error } = await supabase
     .from("courses")
     .select(
-      "id, slug, code, name, description, university:universities(name, short_name), " +
-        "stats:course_stats(workload_hours_per_week, difficulty, would_take_again_pct, response_count, is_demo)",
+      "id, slug, code, name, description, university:universities(name, short_name)",
     )
     .eq("slug", slug.toLowerCase())
     .maybeSingle<CourseDetailRow>();
   if (error) throw new Error(`Could not load course: ${error.message}`);
   if (!course) return null;
 
-  const [members, posts, membership] = await Promise.all([
+  const [members, posts, membership, stats, rating] = await Promise.all([
     supabase.from("course_members").select("*", { count: "exact", head: true }).eq("course_id", course.id),
     supabase.from("posts").select("*", { count: "exact", head: true }).eq("course_id", course.id),
     viewerId
       ? supabase
           .from("course_members")
           .select("user_id")
+          .eq("course_id", course.id)
+          .eq("user_id", viewerId)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    supabase.from("course_rating_stats").select("*").eq("course_id", course.id).maybeSingle(),
+    viewerId
+      ? supabase
+          .from("course_ratings")
+          .select("workload_hours, difficulty, would_take_again, semester")
           .eq("course_id", course.id)
           .eq("user_id", viewerId)
           .maybeSingle()
@@ -142,13 +151,22 @@ export async function getCourse(slug: string, viewerId?: string): Promise<Course
     memberCount: members.count ?? 0,
     postCount: posts.count ?? 0,
     viewerIsMember: Boolean(membership.data),
-    stats: course.stats && {
-      workloadHoursPerWeek: Number(course.stats.workload_hours_per_week),
-      difficulty: Number(course.stats.difficulty),
-      wouldTakeAgainPct: course.stats.would_take_again_pct,
-      responseCount: course.stats.response_count,
-      isDemo: course.stats.is_demo,
-    },
+    stats: stats.data
+      ? {
+          workloadHoursPerWeek: Number(stats.data.avg_workload_hours),
+          difficulty: Number(stats.data.avg_difficulty),
+          wouldTakeAgainPct: stats.data.would_take_again_pct,
+          ratingCount: stats.data.rating_count,
+        }
+      : null,
+    viewerRating: rating.data
+      ? {
+          workloadHours: rating.data.workload_hours,
+          difficulty: rating.data.difficulty,
+          wouldTakeAgain: rating.data.would_take_again,
+          semester: rating.data.semester,
+        }
+      : null,
   };
 }
 
