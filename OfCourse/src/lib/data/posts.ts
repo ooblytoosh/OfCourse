@@ -6,7 +6,25 @@ export type Author = {
   name: string | null;
   username: string | null;
   avatar_url: string | null;
+  verified: boolean;
+  // Short name of the verified university, e.g. "Georgia Tech".
+  university: string | null;
 };
+
+type AuthorRow = Omit<Author, "university"> & {
+  university: { name: string; short_name: string | null } | null;
+};
+
+const AUTHOR_FIELDS =
+  "id, name, username, avatar_url, verified, university:universities(name, short_name)";
+
+export function toAuthor(row: AuthorRow | null): Author | null {
+  if (!row) return null;
+  return {
+    ...row,
+    university: row.verified ? (row.university?.short_name ?? row.university?.name ?? null) : null,
+  };
+}
 
 export type PostSummary = {
   id: string;
@@ -15,10 +33,12 @@ export type PostSummary = {
   type: PostType;
   semester: string | null;
   createdAt: string;
+  // Set when the author edited the post after publishing it.
+  editedAt: string | null;
   voteScore: number;
   commentCount: number;
   author: Author | null;
-  course: { slug: string; code: string };
+  course: { slug: string; code: string; name: string };
   topics: { id: string; name: string }[];
   viewerHasVoted: boolean;
   viewerHasSaved: boolean;
@@ -28,8 +48,8 @@ export type FeedSort = "hot" | "new" | "top";
 export const FEED_SORTS: FeedSort[] = ["hot", "new", "top"];
 
 const POST_SELECT =
-  "id, title, content, type, semester, created_at, vote_score, comment_count, " +
-  "author:profiles!posts_author_id_fkey(id, name, username, avatar_url), course:courses(slug, code), topics(id, name)";
+  "id, title, content, type, semester, created_at, updated_at, vote_score, comment_count, " +
+  `author:profiles!posts_author_id_fkey(${AUTHOR_FIELDS}), course:courses(slug, code, name), topics(id, name)`;
 
 type PostRow = {
   id: string;
@@ -38,10 +58,11 @@ type PostRow = {
   type: PostType;
   semester: string | null;
   created_at: string;
+  updated_at: string;
   vote_score: number;
   comment_count: number;
-  author: Author | null;
-  course: { slug: string; code: string };
+  author: AuthorRow | null;
+  course: { slug: string; code: string; name: string };
   topics: { id: string; name: string }[];
 };
 
@@ -68,14 +89,20 @@ async function withViewerState(rows: PostRow[], viewerId?: string): Promise<Post
     type: r.type,
     semester: r.semester,
     createdAt: r.created_at,
+    editedAt: wasEdited(r.created_at, r.updated_at) ? r.updated_at : null,
     voteScore: r.vote_score,
     commentCount: r.comment_count,
-    author: r.author,
+    author: toAuthor(r.author),
     course: r.course,
     topics: [...r.topics].sort((a, b) => a.name.localeCompare(b.name)),
     viewerHasVoted: voted.has(r.id),
     viewerHasSaved: saved.has(r.id),
   }));
+}
+
+// Ignore the tiny gap between insert and the first write in the same request.
+function wasEdited(createdAt: string, updatedAt: string): boolean {
+  return new Date(updatedAt).getTime() - new Date(createdAt).getTime() > 60_000;
 }
 
 function sanitizeQuery(query: string): string {
@@ -124,7 +151,7 @@ export async function getPost(postId: string, viewerId?: string): Promise<PostDe
     .from("posts")
     .select(
       POST_SELECT.replace(
-        "course:courses(slug, code)",
+        "course:courses(slug, code, name)",
         "course:courses(id, slug, code, name, university:universities(name, short_name))",
       ),
     )
@@ -173,6 +200,9 @@ export type CommentNode = {
   id: string;
   content: string;
   createdAt: string;
+  edited: boolean;
+  // Deleted comments that still have replies stay as placeholders.
+  deleted: boolean;
   author: Author | null;
   replies: CommentNode[];
 };
@@ -182,7 +212,9 @@ export async function getComments(postId: string): Promise<CommentNode[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("comments")
-    .select("id, content, created_at, parent_comment_id, author:profiles(id, name, username, avatar_url)")
+    .select(
+      `id, content, created_at, updated_at, deleted_at, parent_comment_id, author:profiles(${AUTHOR_FIELDS})`,
+    )
     .eq("post_id", postId)
     .order("created_at", { ascending: true })
     .overrideTypes<
@@ -190,8 +222,10 @@ export async function getComments(postId: string): Promise<CommentNode[]> {
         id: string;
         content: string;
         created_at: string;
+        updated_at: string;
+        deleted_at: string | null;
         parent_comment_id: string | null;
-        author: Author | null;
+        author: AuthorRow | null;
       }[]
     , { merge: false }>();
   if (error) throw new Error(`Could not load comments: ${error.message}`);
@@ -199,11 +233,14 @@ export async function getComments(postId: string): Promise<CommentNode[]> {
   const byId = new Map<string, CommentNode>();
   const roots: CommentNode[] = [];
   for (const c of data) {
+    const deleted = c.deleted_at !== null;
     byId.set(c.id, {
       id: c.id,
-      content: c.content,
+      content: deleted ? "" : c.content,
       createdAt: c.created_at,
-      author: c.author,
+      edited: !deleted && wasEdited(c.created_at, c.updated_at),
+      deleted,
+      author: deleted ? null : toAuthor(c.author),
       replies: [],
     });
   }
@@ -214,4 +251,18 @@ export async function getComments(postId: string): Promise<CommentNode[]> {
     else roots.push(node);
   }
   return roots;
+}
+
+// A student's posts, newest first.
+export async function getPostsByAuthor(authorId: string, viewerId?: string): Promise<PostSummary[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("posts")
+    .select(POST_SELECT)
+    .eq("author_id", authorId)
+    .order("created_at", { ascending: false })
+    .limit(100)
+    .overrideTypes<PostRow[], { merge: false }>();
+  if (error) throw new Error(`Could not load posts: ${error.message}`);
+  return withViewerState(data, viewerId);
 }

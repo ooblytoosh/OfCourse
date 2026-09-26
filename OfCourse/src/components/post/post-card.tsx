@@ -43,7 +43,12 @@ export function PostCard({
       </h2>
 
       <div className="mt-1.5">
-        <PostMeta author={post.author} semester={post.semester} createdAt={post.createdAt} />
+        <PostMeta
+          author={post.author}
+          semester={post.semester}
+          createdAt={post.createdAt}
+          editedAt={post.editedAt}
+        />
       </div>
 
       <p className="mt-3 line-clamp-3 text-sm text-muted-foreground">{preview(post.content, 320)}</p>

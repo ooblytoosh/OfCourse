@@ -96,6 +96,7 @@ export type Database = {
           bio: string | null;
           avatar_url: string | null;
           verified: boolean;
+          verified_at: string | null;
           updated_at: string;
         } & Timestamps;
         Insert: {
@@ -108,6 +109,7 @@ export type Database = {
           bio?: string | null;
           avatar_url?: string | null;
           verified?: boolean;
+          verified_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -205,6 +207,7 @@ export type Database = {
           author_id: string;
           parent_comment_id: string | null;
           content: string;
+          deleted_at: string | null;
           updated_at: string;
         } & Timestamps;
         Insert: {
@@ -213,6 +216,7 @@ export type Database = {
           author_id: string;
           parent_comment_id?: string | null;
           content: string;
+          deleted_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -326,7 +330,10 @@ export type Database = {
       };
     };
     Views: { [_ in never]: never };
-    Functions: { [_ in never]: never };
+    Functions: {
+      claim_university_verification: { Args: never; Returns: string | null };
+      university_for_email: { Args: { email: string }; Returns: string | null };
+    };
     Enums: {
       post_type:
         | "note"

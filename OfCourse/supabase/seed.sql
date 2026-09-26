@@ -13,9 +13,26 @@ begin;
 -- University & courses
 -- ---------------------------------------------------------------------------
 
+-- Students at these universities can verify with their school email.
+-- (Subdomains count too, e.g. andrew.cmu.edu matches cmu.edu.)
 insert into public.universities (name, short_name, domain)
-values ('Georgia Institute of Technology', 'Georgia Tech', 'gatech.edu')
-on conflict (domain) do update set short_name = excluded.short_name;
+values
+  ('Georgia Institute of Technology', 'Georgia Tech', 'gatech.edu'),
+  ('Emory University', 'Emory', 'emory.edu'),
+  ('University of Georgia', 'UGA', 'uga.edu'),
+  ('Georgia State University', 'Georgia State', 'gsu.edu'),
+  ('Massachusetts Institute of Technology', 'MIT', 'mit.edu'),
+  ('Stanford University', 'Stanford', 'stanford.edu'),
+  ('University of California, Berkeley', 'UC Berkeley', 'berkeley.edu'),
+  ('University of California, Los Angeles', 'UCLA', 'ucla.edu'),
+  ('Carnegie Mellon University', 'Carnegie Mellon', 'cmu.edu'),
+  ('University of Michigan', 'Michigan', 'umich.edu'),
+  ('University of Illinois Urbana-Champaign', 'UIUC', 'illinois.edu'),
+  ('Purdue University', 'Purdue', 'purdue.edu'),
+  ('The University of Texas at Austin', 'UT Austin', 'utexas.edu'),
+  ('Cornell University', 'Cornell', 'cornell.edu'),
+  ('New York University', 'NYU', 'nyu.edu')
+on conflict (domain) do update set name = excluded.name, short_name = excluded.short_name;
 
 insert into public.courses (university_id, code, slug, name, description)
 select u.id, c.code, c.slug, c.name, c.description
@@ -63,7 +80,7 @@ on conflict (course_id, name) do nothing;
 -- Demo students
 -- ---------------------------------------------------------------------------
 
-create temp table demo_users (n int primary key, name text, username text, major text, grad_year int)
+create temp table demo_users (n int primary key, name text, username text, major text, grad_year int, bio text default null)
 on commit drop;
 
 insert into demo_users values
@@ -98,6 +115,16 @@ insert into demo_users values
   (29, 'Yuki Sato', 'yukisato', 'Computer Science', 2028),
   (30, 'Maya Robinson', 'mayar', 'Biomedical Engineering', 2027);
 
+update demo_users d set bio = b.bio
+from (values
+  (1, 'I learn best by drawing things out and then implementing them.'),
+  (2, 'Trees, graphs and too much coffee. Happy to explain rotations to anyone.'),
+  (3, 'CS 4641 was rough but worth it. Ask me about AI electives.'),
+  (4, 'Hardware person who learned to love data structures.'),
+  (15, 'Graph algorithms enthusiast. I make study guides for fun.')
+) as b (n, bio)
+where d.n = b.n;
+
 -- Deterministic ids so the seed can be re-run safely.
 create or replace function pg_temp.demo_id(prefix text, n int) returns uuid
 language sql immutable as $$
@@ -119,11 +146,17 @@ select
 from demo_users
 on conflict (id) do nothing;
 
+-- Demo students are shown as verified Georgia Tech students. (Real users are
+-- only verified by confirming a university email address.)
 update public.profiles p
 set username = d.username,
     major = d.major,
     grad_year = d.grad_year,
-    university_id = (select id from public.universities where domain = 'gatech.edu')
+    bio = d.bio,
+    university_id = (select id from public.universities where domain = 'gatech.edu'),
+    verified = true,
+    verified_at = coalesce(p.verified_at, now() - interval '300 days'),
+    created_at = least(p.created_at, now() - interval '400 days' + d.n * interval '3 days')
 from demo_users d
 where p.id = pg_temp.demo_id('d', d.n);
 
@@ -455,10 +488,10 @@ $t$I can compute things, but I don't "see" what a transformation does. Did anyon
 'Summer 2026', 3, 20);
 
 insert into public.posts
-  (id, course_id, author_id, title, content, type, semester, integrity_attested_at, created_at)
+  (id, course_id, author_id, title, content, type, semester, integrity_attested_at, created_at, updated_at)
 select pg_temp.demo_id('e', p.n), c.id, pg_temp.demo_id('d', p.author), p.title, p.content,
        p.type, p.semester, now() - p.days_ago * interval '1 day',
-       now() - p.days_ago * interval '1 day'
+       now() - p.days_ago * interval '1 day', now() - p.days_ago * interval '1 day'
 from demo_posts p
 join public.courses c on c.slug = p.course
 on conflict (id) do nothing;
@@ -568,10 +601,11 @@ insert into demo_comments values
 (57, 28, 6, null, 'The picture of stretching without turning is what made it click for me too.', 10),
 (58, 31, 27, null, 'Watch where the two basis vectors go. The columns of the matrix are literally where they land.', 4);
 
-insert into public.comments (id, post_id, author_id, parent_comment_id, content, created_at)
+insert into public.comments (id, post_id, author_id, parent_comment_id, content, created_at, updated_at)
 select pg_temp.demo_id('c', dc.n), pg_temp.demo_id('e', dc.post), pg_temp.demo_id('d', dc.author),
        case when dc.parent is null then null else pg_temp.demo_id('c', dc.parent) end,
        dc.content,
+       now() - p.days_ago * interval '1 day' + dc.hours_after * interval '1 hour',
        now() - p.days_ago * interval '1 day' + dc.hours_after * interval '1 hour'
 from demo_comments dc
 join demo_posts p on p.n = dc.post

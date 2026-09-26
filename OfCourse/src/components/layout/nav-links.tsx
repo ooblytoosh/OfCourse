@@ -18,7 +18,12 @@ export function NavLinks({ orientation }: { orientation: "vertical" | "horizonta
       )}
     >
       {mainNav.map(({ href, label, icon: Icon }) => {
-        const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+        const active =
+          href === "/"
+            ? pathname === "/"
+            : href === "/profile"
+              ? pathname.startsWith("/profile") || pathname.startsWith("/settings")
+              : pathname.startsWith(href);
         return (
           <Link
             key={href}

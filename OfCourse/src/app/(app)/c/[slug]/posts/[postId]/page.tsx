@@ -6,6 +6,7 @@ import { notFound, redirect } from "next/navigation";
 import { CommentForm } from "@/components/post/comment-form";
 import { CommentThread } from "@/components/post/comment-thread";
 import { PostMeta } from "@/components/post/post-meta";
+import { PostOwnerActions } from "@/components/post/post-owner-actions";
 import { PostTypeBadge } from "@/components/post/post-type-badge";
 import { SaveButton } from "@/components/post/save-button";
 import { TopicChip } from "@/components/post/topic-chip";
@@ -52,7 +53,12 @@ export default async function PostPage({ params }: PageProps<"/c/[slug]/posts/[p
           {post.title}
         </h1>
         <div className="mt-3">
-          <PostMeta author={post.author} semester={post.semester} createdAt={post.createdAt} />
+          <PostMeta
+            author={post.author}
+            semester={post.semester}
+            createdAt={post.createdAt}
+            editedAt={post.editedAt}
+          />
         </div>
 
         {post.topics.length > 0 && (
@@ -76,13 +82,26 @@ export default async function PostPage({ params }: PageProps<"/c/[slug]/posts/[p
             {formatCount(post.commentCount, "comment")}
           </span>
           <SaveButton postId={post.id} saved={post.viewerHasSaved} signedIn={signedIn} />
+          {user && post.author?.id === user.id && (
+            <div className="ml-auto">
+              <PostOwnerActions
+                postId={post.id}
+                editHref={`/c/${post.course.slug}/posts/${post.id}/edit`}
+              />
+            </div>
+          )}
         </div>
       </article>
 
       <section id="comments" className="flex scroll-mt-20 flex-col gap-5">
         <h2 className="text-lg font-semibold">Comments</h2>
         <CommentForm postId={post.id} signedIn={signedIn} />
-        <CommentThread comments={comments} postId={post.id} signedIn={signedIn} />
+        <CommentThread
+          comments={comments}
+          postId={post.id}
+          signedIn={signedIn}
+          viewerId={user?.id}
+        />
       </section>
     </div>
   );

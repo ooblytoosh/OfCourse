@@ -45,7 +45,7 @@ export async function SiteHeader() {
             <span className="hidden sm:inline">New Post</span>
           </ButtonLink>
           {user ? (
-            <Link href="/profile" aria-label="Profile" className="rounded-full">
+            <Link href="/profile" aria-label="Your profile" className="rounded-full">
               <Avatar>
                 <AvatarFallback>{initials(displayName)}</AvatarFallback>
               </Avatar>
