@@ -69,7 +69,7 @@ function AnswerText({ text, sources }: { text: string; sources: AskSource[] }) {
 
 export function SourceCard({ source, index }: { source: AskSource; index?: number }) {
   return (
-    <li className="flex flex-col gap-2 rounded-xl border bg-card p-3.5">
+    <li className="surface surface-interactive flex h-full flex-col gap-2 p-3.5">
       <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm">
         {index !== undefined && (
           <span className="grid size-5 shrink-0 place-items-center rounded bg-brand/10 text-[0.7rem] font-semibold text-brand">
@@ -109,7 +109,7 @@ const SHOWN = 3;
 
 // A course knowledge search result: question, synthesis, and the real student
 // posts it drew on. Sources come from database records, never from the model.
-export function AiAnswer({ result, onReset }: { result: AskResult; onReset: () => void }) {
+export function AiAnswer({ result, onReset }: { result: AskResult; onReset?: () => void }) {
   const [showAll, setShowAll] = useState(false);
 
   if (result.status === "error") {
@@ -124,7 +124,6 @@ export function AiAnswer({ result, onReset }: { result: AskResult; onReset: () =
   if (result.status === "no_results") {
     return (
       <div className="flex flex-col gap-3">
-        <p className="text-sm text-muted-foreground">You asked: “{result.question}”</p>
         <div className="rounded-lg bg-muted p-3 text-sm">
           <p className="font-medium">I couldn&apos;t find enough student-created content for this question yet.</p>
           <p className="mt-1 text-muted-foreground">
@@ -137,9 +136,7 @@ export function AiAnswer({ result, onReset }: { result: AskResult; onReset: () =
         </div>
         {result.closest.length > 0 && (
           <div className="flex flex-col gap-2">
-            <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-              Closest posts
-            </p>
+            <p className="text-sm font-semibold">Closest posts</p>
             <ul className="grid gap-2 sm:grid-cols-3">
               {result.closest.map((s) => (
                 <SourceCard key={s.id} source={s} />
@@ -147,9 +144,11 @@ export function AiAnswer({ result, onReset }: { result: AskResult; onReset: () =
             </ul>
           </div>
         )}
-        <button type="button" onClick={onReset} className="w-fit text-sm font-medium text-muted-foreground hover:text-foreground">
-          Ask something else
-        </button>
+        {onReset && (
+          <button type="button" onClick={onReset} className="w-fit text-sm font-medium text-muted-foreground hover:text-foreground">
+            Ask something else
+          </button>
+        )}
       </div>
     );
   }
@@ -159,7 +158,6 @@ export function AiAnswer({ result, onReset }: { result: AskResult; onReset: () =
   const visible = showAll ? sources : sources.slice(0, SHOWN);
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm text-muted-foreground">You asked: “{result.question}”</p>
 
       <div className="rounded-xl border border-brand/20 bg-brand/[0.03] p-4">
         <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold tracking-wider text-brand uppercase">
@@ -179,7 +177,7 @@ export function AiAnswer({ result, onReset }: { result: AskResult; onReset: () =
       </div>
 
       <div className="flex flex-col gap-2">
-        <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+        <p className="text-sm font-semibold">
           {notCovered ? "Closest student posts" : "Students who explained this"}
         </p>
         <ul className={cn("grid gap-2", visible.length > 1 && "sm:grid-cols-2", visible.length > 2 && "lg:grid-cols-3")}>
@@ -197,9 +195,11 @@ export function AiAnswer({ result, onReset }: { result: AskResult; onReset: () =
               {showAll ? "Show fewer" : `View all ${sources.length} resources`}
             </button>
           )}
-          <button type="button" onClick={onReset} className="font-medium text-muted-foreground hover:text-foreground">
-            Ask something else
-          </button>
+          {onReset && (
+            <button type="button" onClick={onReset} className="font-medium text-muted-foreground hover:text-foreground">
+              Ask something else
+            </button>
+          )}
         </div>
       </div>
     </div>

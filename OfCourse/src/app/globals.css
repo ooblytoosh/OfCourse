@@ -54,8 +54,9 @@
   /* OfCourse brand accent (warm orange) */
   --brand: oklch(0.6 0.19 40);
   --brand-foreground: oklch(0.99 0 0);
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  /* Warm off-white page, white cards */
+  --background: oklch(0.984 0.003 85);
+  --foreground: oklch(0.17 0.005 60);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
@@ -64,12 +65,12 @@
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
+  --muted: oklch(0.962 0.004 85);
+  --muted-foreground: oklch(0.52 0.008 60);
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
+  --border: oklch(0.915 0.004 85);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
   --chart-1: oklch(0.87 0 0);
@@ -77,7 +78,7 @@
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
+  --radius: 0.75rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -136,5 +137,34 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+/* Shared surfaces: every card uses these so pages look and behave alike. */
+@utility surface {
+  border-radius: var(--radius-2xl);
+  border-width: 1px;
+  background-color: var(--card);
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+}
+
+@utility surface-interactive {
+  transition-property: transform, box-shadow, border-color;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px -12px rgb(0 0 0 / 0.18);
+    border-color: color-mix(in oklch, var(--foreground) 14%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

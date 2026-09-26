@@ -33,7 +33,7 @@ export default async function NewPostPage({ searchParams }: PageProps<"/new">) {
       </div>
 
       <aside className="flex flex-col gap-4 text-sm lg:pt-2">
-        <section className="rounded-xl border bg-card p-4">
+        <section className="surface p-4">
           <h2 className="font-medium">Share your own work</h2>
           <ul className="mt-2 space-y-1.5">
             {POSTABLE_TYPES.map((type) => (
@@ -44,7 +44,7 @@ export default async function NewPostPage({ searchParams }: PageProps<"/new">) {
             ))}
           </ul>
         </section>
-        <section className="rounded-xl border bg-card p-4">
+        <section className="surface p-4">
           <h2 className="font-medium">Never post</h2>
           <ul className="mt-2 space-y-1.5">
             {PROHIBITED_CONTENT.map((item) => (

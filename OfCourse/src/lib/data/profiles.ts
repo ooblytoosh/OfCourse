@@ -13,6 +13,7 @@ export type Profile = {
   bio: string | null;
   verified: boolean;
   university: { name: string; shortName: string; domain: string } | null;
+  termsAcceptedAt: string | null;
   createdAt: string;
 };
 
@@ -25,12 +26,13 @@ type ProfileRow = {
   grad_year: number | null;
   bio: string | null;
   verified: boolean;
+  terms_accepted_at: string | null;
   created_at: string;
   university: { name: string; short_name: string | null; domain: string } | null;
 };
 
 const PROFILE_SELECT =
-  "id, name, username, avatar_url, major, grad_year, bio, verified, created_at, " +
+  "id, name, username, avatar_url, major, grad_year, bio, verified, terms_accepted_at, created_at, " +
   "university:universities(name, short_name, domain)";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -54,6 +56,7 @@ function toProfile(row: ProfileRow): Profile {
             domain: row.university.domain,
           }
         : null,
+    termsAcceptedAt: row.terms_accepted_at,
     createdAt: row.created_at,
   };
 }

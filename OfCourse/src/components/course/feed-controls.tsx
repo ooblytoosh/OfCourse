@@ -46,17 +46,18 @@ export function FeedControls({
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
       {showSort ? (
-        <div className="flex gap-1" role="group" aria-label="Sort posts">
+        <div className="inline-flex gap-0.5 rounded-lg bg-muted p-0.5" role="group" aria-label="Sort posts">
           {SORTS.map(({ value, label, icon: Icon }) => (
             <Link
               key={value}
               href={feedHref(slug, { tab, sort: value, topic, q })}
               aria-current={sort === value ? "page" : undefined}
+              scroll={false}
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors",
+                "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-sm font-medium transition-all duration-200",
                 sort === value
-                  ? "bg-foreground text-background"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               <Icon className="size-4" aria-hidden />

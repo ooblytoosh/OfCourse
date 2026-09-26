@@ -1,8 +1,8 @@
 "use client";
 
-import { MailCheck } from "lucide-react";
 import { useActionState, useState } from "react";
 
+import { CodeForm } from "@/components/auth/code-form";
 import { selectClass } from "@/components/auth/signup-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,11 +29,15 @@ export function VerificationForm({
   );
   const university = universities.find((u) => u.id === universityId);
 
-  if (state?.message) {
+  if (state?.sentTo && state.mode) {
     return (
-      <div className="flex items-start gap-3 rounded-lg bg-muted p-4 text-sm" role="status">
-        <MailCheck className="mt-0.5 size-5 shrink-0 text-brand" />
-        <p>{state.message}</p>
+      <div className="flex flex-col gap-3">
+        <p className="text-sm" role="status">
+          We emailed a code to <span className="font-medium">{state.sentTo}</span>.
+          {state.mode === "email_change" &&
+            " Entering it switches your account to that address. Supabase may also email your current address to approve the change."}
+        </p>
+        <CodeForm email={state.sentTo} mode={state.mode} next="/settings" />
       </div>
     );
   }
@@ -79,10 +83,10 @@ export function VerificationForm({
       )}
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs text-muted-foreground">
-          We&apos;ll email a link to this address. Opening it proves you own it.
+          We&apos;ll email you a code to confirm you own this address.
         </p>
         <Button type="submit" disabled={pending} className="shrink-0">
-          {pending ? "Sending…" : "Send verification link"}
+          {pending ? "Sending…" : "Send code"}
         </Button>
       </div>
     </form>

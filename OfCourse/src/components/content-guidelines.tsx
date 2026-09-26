@@ -6,7 +6,7 @@ import { POST_TYPES, POSTABLE_TYPES, PROHIBITED_CONTENT } from "@/lib/content-po
 export function ContentGuidelines() {
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      <section className="rounded-xl border p-5">
+      <section className="surface p-5">
         <h2 className="font-medium">Share your own work</h2>
         <ul className="mt-3 space-y-2 text-sm">
           {POSTABLE_TYPES.map((type) => POST_TYPES[type]).map(({ label, description }) => (
@@ -20,7 +20,7 @@ export function ContentGuidelines() {
           ))}
         </ul>
       </section>
-      <section className="rounded-xl border p-5">
+      <section className="surface p-5">
         <h2 className="font-medium">Never post</h2>
         <ul className="mt-3 space-y-2 text-sm">
           {PROHIBITED_CONTENT.map((item) => (

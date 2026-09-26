@@ -84,7 +84,7 @@ export function ResourcesByUnit({
         <section
           key={unit.id ?? "other"}
           id={`unit-${unit.position ?? "other"}`}
-          className="scroll-mt-20 overflow-hidden rounded-xl border bg-card"
+          className="surface scroll-mt-20 overflow-hidden"
         >
           <div className="border-b bg-muted/40 px-4 py-3">
             <h3 className="font-semibold">
@@ -142,7 +142,7 @@ export function ResourcesByUnit({
       ))}
 
       {general.length > 0 && (
-        <section className="overflow-hidden rounded-xl border bg-card">
+        <section className="surface overflow-hidden">
           <h3 className="border-b bg-muted/40 px-4 py-3 font-semibold">General</h3>
           <ul className="divide-y">
             {general.map((post) => (

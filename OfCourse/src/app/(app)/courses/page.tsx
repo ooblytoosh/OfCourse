@@ -2,7 +2,7 @@ import { SearchX } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { CourseList } from "@/components/course/course-list";
+import { CourseGrid } from "@/components/course/course-card";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { searchCourses } from "@/lib/data/courses";
@@ -25,7 +25,7 @@ export default async function CoursesPage({ searchParams }: PageProps<"/courses"
         }
       />
       {courses.length > 0 ? (
-        <CourseList courses={courses} />
+        <CourseGrid courses={courses} />
       ) : (
         <EmptyState icon={SearchX} title="No courses match that search">
           Try a course code like “CS 1332” or a name like “data structures”.{" "}

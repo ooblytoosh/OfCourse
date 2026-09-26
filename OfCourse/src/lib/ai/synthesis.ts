@@ -23,6 +23,7 @@ Rules:
 - Never invent student experiences, quotes, names, post titles, links or sources. Only say a student said something if their post says it.
 - Some sources are other students' questions or opinions. The student asking now is someone else: never tell them "your intuition is right" or reply as if they wrote a source.
 - Make clear what is your synthesis and what students actually said (for example: "Jordan explains that…" only when that post says so).
+- Earlier messages in the conversation are context only (so follow-up questions make sense). Cite only the sources listed in the latest message.
 - Don't include URLs or a list of sources at the end; the app shows the sources.
 - Be concise: at most about 180 words. Use short paragraphs or "- " bullet points. No headings.`;
 
@@ -66,13 +67,33 @@ export function sanitizeAnswer(text: string, sourceCount: number): { answer: str
   return { answer, cited };
 }
 
-export async function synthesize(openai: OpenAI, question: string, sources: SourcePost[]) {
+export type ChatTurn = { question: string; answer: string };
+
+// Earlier turns are sent (trimmed, without their old citation numbers) so
+// follow-up questions have context.
+function historyMessages(history: ChatTurn[]) {
+  return history.flatMap((turn) => [
+    { role: "user" as const, content: turn.question },
+    {
+      role: "assistant" as const,
+      content: turn.answer.replace(/\[S\d+\]/g, "").slice(0, AI_LIMITS.historyAnswerChars),
+    },
+  ]);
+}
+
+export async function synthesize(
+  openai: OpenAI,
+  question: string,
+  sources: SourcePost[],
+  history: ChatTurn[] = [],
+) {
   const context = sources.map((post, i) => formatSource(post, `S${i + 1}`)).join("\n\n---\n\n");
   const isReasoningModel = /^(gpt-5|o\d)/.test(CHAT_MODEL);
   const completion = await openai.chat.completions.create({
     model: CHAT_MODEL,
     messages: [
       { role: "system", content: SYSTEM_PROMPT },
+      ...historyMessages(history),
       { role: "user", content: `Student posts from this course:\n\n${context}\n\nQuestion: ${question}` },
     ],
     max_completion_tokens: isReasoningModel ? 2000 : 500,
