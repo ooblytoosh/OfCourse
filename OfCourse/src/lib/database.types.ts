@@ -15,9 +15,15 @@ export type Database = {
   public: {
     Tables: {
       universities: {
-        Row: { id: string; name: string; domain: string } & Timestamps;
-        Insert: { id?: string; name: string; domain: string; created_at?: string };
-        Update: { id?: string; name?: string; domain?: string; created_at?: string };
+        Row: { id: string; name: string; short_name: string | null; domain: string } & Timestamps;
+        Insert: {
+          id?: string;
+          name: string;
+          short_name?: string | null;
+          domain: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["universities"]["Insert"]>;
         Relationships: [];
       };
       courses: {
@@ -25,6 +31,7 @@ export type Database = {
           id: string;
           university_id: string;
           code: string;
+          slug: string;
           name: string;
           description: string | null;
         } & Timestamps;
@@ -32,6 +39,7 @@ export type Database = {
           id?: string;
           university_id: string;
           code: string;
+          slug: string;
           name: string;
           description?: string | null;
           created_at?: string;
@@ -43,6 +51,36 @@ export type Database = {
             columns: ["university_id"];
             isOneToOne: false;
             referencedRelation: "universities";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      course_stats: {
+        Row: {
+          course_id: string;
+          workload_hours_per_week: number;
+          difficulty: number;
+          would_take_again_pct: number;
+          response_count: number;
+          is_demo: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          course_id: string;
+          workload_hours_per_week: number;
+          difficulty: number;
+          would_take_again_pct: number;
+          response_count: number;
+          is_demo?: boolean;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["course_stats"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "course_stats_course_id_fkey";
+            columns: ["course_id"];
+            isOneToOne: true;
+            referencedRelation: "courses";
             referencedColumns: ["id"];
           },
         ];
@@ -125,6 +163,9 @@ export type Database = {
           type: Database["public"]["Enums"]["post_type"];
           semester: string | null;
           integrity_attested_at: string;
+          vote_score: number;
+          comment_count: number;
+          hot_score: number;
           updated_at: string;
         } & Timestamps;
         Insert: {

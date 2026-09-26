@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { Suspense } from "react";
 
+import { JoinedCourses } from "@/components/layout/joined-courses";
 import { NavLinks } from "@/components/layout/nav-links";
 import { SiteHeader } from "@/components/layout/site-header";
 
@@ -17,6 +19,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <aside className="hidden w-52 shrink-0 md:block">
           <div className="sticky top-14 flex flex-col gap-6 py-6">
             <NavLinks orientation="vertical" />
+            <Suspense fallback={null}>
+              <JoinedCourses />
+            </Suspense>
             <Link
               href="/guidelines"
               className="px-3 text-xs text-muted-foreground hover:text-foreground"
