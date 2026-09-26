@@ -30,7 +30,7 @@ export default async function SignupPage() {
         <CardContent className="flex flex-col gap-4">
           <SignupForm universities={universities} gradYears={gradYearOptions()} />
           <p className="text-center text-xs text-muted-foreground">
-            Next, you&apos;ll confirm your email with a code and review the{" "}
+            Next, you&apos;ll confirm your email and review the{" "}
             <Link href="/terms" className="underline underline-offset-2 hover:text-foreground">
               OfCourse terms
             </Link>

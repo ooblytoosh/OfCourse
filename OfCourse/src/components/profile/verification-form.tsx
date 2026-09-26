@@ -33,7 +33,8 @@ export function VerificationForm({
     return (
       <div className="flex flex-col gap-3">
         <p className="text-sm" role="status">
-          We emailed a code to <span className="font-medium">{state.sentTo}</span>.
+          We sent an email to <span className="font-medium">{state.sentTo}</span>. Click the link in
+          it, or type the code below if the email has one.
           {state.mode === "email_change" &&
             " Entering it switches your account to that address. Supabase may also email your current address to approve the change."}
         </p>

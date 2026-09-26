@@ -32,7 +32,7 @@ export function CodeForm({ email, mode, next }: { email: string; mode: CodeMode;
         <input type="hidden" name="mode" value={mode} />
         <input type="hidden" name="next" value={next} />
         <label htmlFor="code" className="text-sm font-medium">
-          Verification code
+          Code from the email
         </label>
         <input
           id="code"
@@ -63,14 +63,14 @@ export function CodeForm({ email, mode, next }: { email: string; mode: CodeMode;
           disabled={cooldown > 0 || resending}
           onClick={() =>
             startResend(async () => {
-              const result = await resendEmailCode(email, mode);
+              const result = await resendEmailCode(email, mode, next);
               setNotice(result.message);
               if (result.ok) setCooldown(RESEND_SECONDS);
             })
           }
           className="font-medium text-foreground underline-offset-4 hover:underline disabled:text-muted-foreground disabled:no-underline"
         >
-          {cooldown > 0 ? `send a new code in ${cooldown}s` : resending ? "sending…" : "send a new code"}
+          {cooldown > 0 ? `send a new email in ${cooldown}s` : resending ? "sending…" : "send a new email"}
         </button>
         .
       </p>

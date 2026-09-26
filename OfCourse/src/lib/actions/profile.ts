@@ -5,6 +5,7 @@ import { refresh } from "next/cache";
 
 import { getCurrentUser } from "@/lib/auth";
 import { emailMatchesDomain } from "@/lib/data/profiles";
+import { friendlyEmailError } from "@/lib/email-errors";
 import {
   gradYearOptions,
   normalizeUsername,
@@ -159,11 +160,6 @@ export async function startVerification(
   return reply({ sentTo: email, mode: "email_change" });
 }
 
-function friendlyEmailError(message: string): string {
-  return /rate|seconds|security purposes/i.test(message)
-    ? "Please wait a minute before asking for another code."
-    : message;
-}
 
 const AVATAR_TYPES: Record<string, string> = {
   "image/png": "png",
