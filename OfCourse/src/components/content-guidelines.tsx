@@ -1,6 +1,6 @@
 import { Check, X } from "lucide-react";
 
-import { POST_TYPES, PROHIBITED_CONTENT } from "@/lib/content-policy";
+import { POST_TYPES, POSTABLE_TYPES, PROHIBITED_CONTENT } from "@/lib/content-policy";
 
 // What can and can't be posted. Used on /guidelines and the post composer.
 export function ContentGuidelines() {
@@ -9,7 +9,7 @@ export function ContentGuidelines() {
       <section className="rounded-xl border p-5">
         <h2 className="font-medium">Share your own work</h2>
         <ul className="mt-3 space-y-2 text-sm">
-          {Object.values(POST_TYPES).map(({ label, description }) => (
+          {POSTABLE_TYPES.map((type) => POST_TYPES[type]).map(({ label, description }) => (
             <li key={label} className="flex gap-2">
               <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" />
               <span>
