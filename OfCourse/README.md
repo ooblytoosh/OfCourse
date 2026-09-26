@@ -65,6 +65,7 @@ under Authentication → Emails for anything beyond a demo.
 | `npm run typecheck` | TypeScript check                                   |
 | `npm run db:push`   | Push migrations to the linked Supabase project     |
 | `npm run db:types`  | Regenerate `src/lib/database.types.ts`             |
+| `npm run embed:posts` | Generate AI search embeddings for posts          |
 
 ## Project layout
 
@@ -82,7 +83,8 @@ src/
   lib/
     actions/          Server actions: vote, save, join, comment, create post, profile, verification
     data/             Read queries for courses, posts, comments, profiles
-    supabase/         Browser, server and proxy Supabase clients
+    ai/               AI search: config, embeddings, retrieval + synthesis
+    supabase/         Browser, server, proxy and service-role Supabase clients
     auth.ts           getCurrentUser / requireUser
     content-policy.ts Allowed post types, prohibited content, integrity attestation
     database.types.ts Typed schema
@@ -98,6 +100,37 @@ Posts take one up- or downvote per student (`votes.value` is 1 or -1; a
 trigger keeps `posts.vote_score` in sync). Students rate a course once
 (workload, difficulty, would take again) in `course_ratings`; individual
 ratings are private and the `course_rating_stats` view exposes only averages.
+
+## AI search (student knowledge)
+
+Every course page has **Ask the student knowledge**: a question is answered
+only from that course's student posts, with links to the posts it used.
+
+```
+post saved ──► embedding (OpenAI) ──► post_embeddings (pgvector, 1536 dims)
+question ──► embedding ──► match_course_posts(course_id) ──► top posts
+         ──► OpenAI chat model ──► answer with [S1] citations ──► source cards
+```
+
+- Models live in `src/lib/ai/config.ts`: `text-embedding-3-small` (1536
+  dimensions, matching the `vector(1536)` column) and `gpt-5.4-mini` for
+  answers. Override with `OPENAI_EMBEDDING_MODEL` / `OPENAI_CHAT_MODEL`.
+- Sources are always the database records that were retrieved. The model only
+  cites them by number; the app builds the links, drops unknown numbers and
+  strips any URL the model writes.
+- New and edited posts are embedded in the background after saving (only when
+  their text changed). Posts without an embedding are indexed the first time
+  someone searches their course.
+- Signed-in students only; 30 questions per student per hour
+  (`AI_HOURLY_LIMIT`). Keys stay on the server.
+
+**Setup:** add `OPENAI_API_KEY` and `SUPABASE_SERVICE_ROLE_KEY` to
+`.env.local` (see `.env.example`), then embed existing posts:
+
+```bash
+npm run embed:posts            # all posts (skips ones already up to date)
+npm run embed:posts -- cs1332  # one course
+```
 
 ## Profile photos
 

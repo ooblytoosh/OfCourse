@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { CommunitySearch } from "@/components/course/community-search";
+import { AskStudentKnowledge } from "@/components/ai/ask-student-knowledge";
 import { CourseHeader } from "@/components/course/course-header";
 import { CourseSidebar } from "@/components/course/course-sidebar";
 import { FeedControls, feedHref } from "@/components/course/feed-controls";
@@ -56,7 +56,12 @@ export default async function CoursePage({ params, searchParams }: PageProps<"/c
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
         <div className="flex min-w-0 flex-col gap-4">
-          <CommunitySearch slug={course.slug} q={q} sort={sort} topic={topic} />
+          <AskStudentKnowledge
+            courseId={course.id}
+            courseCode={course.code}
+            signedIn={Boolean(user)}
+            keywordSearchHref={`/c/${course.slug}`}
+          />
           <FeedControls slug={course.slug} sort={sort} topic={topic} q={q} topics={topics} />
 
           {q && (

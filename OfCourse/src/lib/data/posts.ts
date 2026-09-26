@@ -267,3 +267,19 @@ export async function getPostsByAuthor(authorId: string, viewerId?: string): Pro
   if (error) throw new Error(`Could not load posts: ${error.message}`);
   return withViewerState(data, viewerId);
 }
+
+// Posts by id, in the order given (e.g. by search relevance). Goes through the
+// normal RLS-protected API, so it only returns posts the viewer may see.
+export async function getPostsByIds(ids: string[], viewerId?: string): Promise<PostSummary[]> {
+  if (ids.length === 0) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("posts")
+    .select(POST_SELECT)
+    .in("id", ids)
+    .overrideTypes<PostRow[], { merge: false }>();
+  if (error) throw new Error(`Could not load posts: ${error.message}`);
+  const order = new Map(ids.map((id, i) => [id, i]));
+  const sorted = [...data].sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
+  return withViewerState(sorted, viewerId);
+}
