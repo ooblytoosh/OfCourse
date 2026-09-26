@@ -17,11 +17,11 @@ export default async function CoursesPage({ searchParams }: PageProps<"/courses"
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title={query ? `Results for “${query}”` : "Course communities"}
+        title={query ? `Results for “${query}”` : "Courses"}
         description={
           query
             ? `${courses.length} ${courses.length === 1 ? "course" : "courses"} found`
-            : "Every course has its own community of students who took it."
+            : "Ratings, reviews, study threads and resources from the students who took each course."
         }
       />
       {courses.length > 0 ? (

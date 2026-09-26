@@ -79,6 +79,8 @@ export type CourseDetail = {
   description: string | null;
   university: string;
   memberCount: number;
+  // Members with a verified university email.
+  verifiedStudentCount: number;
   postCount: number;
   viewerIsMember: boolean;
   // Averages of student ratings, or null when nobody has rated the course.
@@ -119,8 +121,13 @@ export async function getCourse(slug: string, viewerId?: string): Promise<Course
   if (error) throw new Error(`Could not load course: ${error.message}`);
   if (!course) return null;
 
-  const [members, posts, membership, stats, rating] = await Promise.all([
+  const [members, verified, posts, membership, stats, rating] = await Promise.all([
     supabase.from("course_members").select("*", { count: "exact", head: true }).eq("course_id", course.id),
+    supabase
+      .from("course_members")
+      .select("user_id, profiles!inner(verified)", { count: "exact", head: true })
+      .eq("course_id", course.id)
+      .eq("profiles.verified", true),
     supabase.from("posts").select("*", { count: "exact", head: true }).eq("course_id", course.id),
     viewerId
       ? supabase
@@ -149,6 +156,7 @@ export async function getCourse(slug: string, viewerId?: string): Promise<Course
     description: course.description,
     university: course.university?.short_name ?? course.university?.name ?? "",
     memberCount: members.count ?? 0,
+    verifiedStudentCount: verified.count ?? 0,
     postCount: posts.count ?? 0,
     viewerIsMember: Boolean(membership.data),
     stats: stats.data
@@ -170,20 +178,48 @@ export async function getCourse(slug: string, viewerId?: string): Promise<Course
   };
 }
 
-export type Topic = { id: string; name: string; postCount: number };
+export type Topic = { id: string; name: string; postCount: number; unitId: string | null };
 
 // A course's topics, most-used first.
 export async function getCourseTopics(courseId: string): Promise<Topic[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("topics")
-    .select("id, name, post_topics(count)")
+    .select("id, name, unit_id, post_topics(count)")
     .eq("course_id", courseId)
-    .overrideTypes<{ id: string; name: string; post_topics: { count: number }[] }[], { merge: false }>();
+    .overrideTypes<
+      { id: string; name: string; unit_id: string | null; post_topics: { count: number }[] }[],
+      { merge: false }
+    >();
   if (error) throw new Error(`Could not load topics: ${error.message}`);
   return data
-    .map((t) => ({ id: t.id, name: t.name, postCount: t.post_topics[0]?.count ?? 0 }))
+    .map((t) => ({ id: t.id, name: t.name, unitId: t.unit_id, postCount: t.post_topics[0]?.count ?? 0 }))
     .sort((a, b) => b.postCount - a.postCount || a.name.localeCompare(b.name));
+}
+
+export type Unit = { id: string | null; position: number | null; name: string; topics: Topic[] };
+
+// The course syllabus: units in order, each with its topics. Topics not
+// assigned to a unit are grouped last under "Other topics".
+export async function getCourseUnits(courseId: string, topics: Topic[]): Promise<Unit[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("course_units")
+    .select("id, position, name")
+    .eq("course_id", courseId)
+    .order("position");
+  if (error) throw new Error(`Could not load units: ${error.message}`);
+  const byName = (a: Topic, b: Topic) => a.name.localeCompare(b.name);
+  const units: Unit[] = data.map((u) => ({
+    id: u.id,
+    position: u.position,
+    name: u.name,
+    topics: topics.filter((t) => t.unitId === u.id).sort(byName),
+  }));
+  const unitIds = new Set(data.map((u) => u.id));
+  const other = topics.filter((t) => !t.unitId || !unitIds.has(t.unitId)).sort(byName);
+  if (other.length) units.push({ id: null, position: null, name: "Other topics", topics: other });
+  return units;
 }
 
 // Every course with its topics, for the post composer.
@@ -191,7 +227,10 @@ export async function getCoursesWithTopics() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("courses")
-    .select("id, slug, code, name, university:universities(short_name, name), topics(id, name)")
+    .select(
+      "id, slug, code, name, university:universities(short_name, name), " +
+        "topics(id, name, unit:course_units(position, name))",
+    )
     .order("code")
     .overrideTypes<
       {
@@ -200,7 +239,11 @@ export async function getCoursesWithTopics() {
         code: string;
         name: string;
         university: { name: string; short_name: string | null } | null;
-        topics: { id: string; name: string }[];
+        topics: {
+          id: string;
+          name: string;
+          unit: { position: number; name: string } | null;
+        }[];
       }[]
     , { merge: false }>();
   if (error) throw new Error(`Could not load courses: ${error.message}`);
@@ -210,6 +253,15 @@ export async function getCoursesWithTopics() {
     code: c.code,
     name: c.name,
     university: c.university?.short_name ?? c.university?.name ?? "",
-    topics: [...c.topics].sort((a, b) => a.name.localeCompare(b.name)),
+    topics: [...c.topics]
+      .sort(
+        (a, b) =>
+          (a.unit?.position ?? 99) - (b.unit?.position ?? 99) || a.name.localeCompare(b.name),
+      )
+      .map((t) => ({
+        id: t.id,
+        name: t.name,
+        unit: t.unit ? `Unit ${t.unit.position}: ${t.unit.name}` : "Other topics",
+      })),
   }));
 }

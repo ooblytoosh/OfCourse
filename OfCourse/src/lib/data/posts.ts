@@ -40,8 +40,8 @@ export type PostSummary = {
   author: Author | null;
   course: { slug: string; code: string; name: string };
   topics: { id: string; name: string }[];
-  // The viewer's vote: 1 (up), -1 (down) or 0.
-  viewerVote: -1 | 0 | 1;
+  // Whether the viewer marked this post helpful.
+  viewerFoundHelpful: boolean;
   viewerHasSaved: boolean;
 };
 
@@ -70,16 +70,16 @@ type PostRow = {
 // Adds whether the viewer has upvoted/saved each post.
 async function withViewerState(rows: PostRow[], viewerId?: string): Promise<PostSummary[]> {
   const ids = rows.map((r) => r.id);
-  let votes = new Map<string, -1 | 1>();
+  let helpful = new Set<string>();
   let saved = new Set<string>();
 
   if (viewerId && ids.length > 0) {
     const supabase = await createClient();
     const [voteRows, bookmarks] = await Promise.all([
-      supabase.from("votes").select("post_id, value").eq("user_id", viewerId).in("post_id", ids),
+      supabase.from("votes").select("post_id").eq("user_id", viewerId).in("post_id", ids),
       supabase.from("bookmarks").select("post_id").eq("user_id", viewerId).in("post_id", ids),
     ]);
-    votes = new Map((voteRows.data ?? []).map((v) => [v.post_id, v.value > 0 ? 1 : -1] as const));
+    helpful = new Set((voteRows.data ?? []).map((v) => v.post_id));
     saved = new Set((bookmarks.data ?? []).map((b) => b.post_id));
   }
 
@@ -96,7 +96,7 @@ async function withViewerState(rows: PostRow[], viewerId?: string): Promise<Post
     author: toAuthor(r.author),
     course: r.course,
     topics: [...r.topics].sort((a, b) => a.name.localeCompare(b.name)),
-    viewerVote: votes.get(r.id) ?? 0,
+    viewerFoundHelpful: helpful.has(r.id),
     viewerHasSaved: saved.has(r.id),
   }));
 }
@@ -113,6 +113,7 @@ function sanitizeQuery(query: string): string {
 export async function getCourseFeed(options: {
   courseId: string;
   sort: FeedSort;
+  types?: readonly PostType[];
   topicId?: string;
   query?: string;
   viewerId?: string;
@@ -124,6 +125,7 @@ export async function getCourseFeed(options: {
     : POST_SELECT;
 
   let request = supabase.from("posts").select(select).eq("course_id", options.courseId);
+  if (options.types) request = request.in("type", [...options.types]);
 
   if (options.topicId) request = request.eq("topic_filter.topic_id", options.topicId);
 
@@ -282,4 +284,14 @@ export async function getPostsByIds(ids: string[], viewerId?: string): Promise<P
   const order = new Map(ids.map((id, i) => [id, i]));
   const sorted = [...data].sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
   return withViewerState(sorted, viewerId);
+}
+
+// How many posts of each type a course has (for the course page tabs).
+export async function getPostTypeCounts(courseId: string): Promise<Partial<Record<PostType, number>>> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("posts").select("type").eq("course_id", courseId);
+  if (error) throw new Error(`Could not count posts: ${error.message}`);
+  const counts: Partial<Record<PostType, number>> = {};
+  for (const { type } of data) counts[type] = (counts[type] ?? 0) + 1;
+  return counts;
 }

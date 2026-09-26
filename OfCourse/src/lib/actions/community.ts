@@ -23,30 +23,27 @@ function text(formData: FormData, name: string): string {
   return typeof value === "string" ? value.trim() : "";
 }
 
-// Vote on a post. Voting the same way again removes the vote; voting the
-// other way switches it. The database keeps one vote per student per post.
-export async function castVote(postId: string, value: 1 | -1): Promise<ActionResult> {
-  if (value !== 1 && value !== -1) return { ok: false, error: "Invalid vote." };
+// Mark a post helpful, or remove the mark. The database keeps one per
+// student per post, so vote_score is the number of students who found it helpful.
+export async function toggleHelpful(postId: string): Promise<ActionResult> {
   const user = await getCurrentUser();
   if (!user) return SIGN_IN_REQUIRED;
   const supabase = await createClient();
 
   const { data: existing } = await supabase
     .from("votes")
-    .select("id, value")
+    .select("id")
     .eq("post_id", postId)
     .eq("user_id", user.id)
     .maybeSingle();
 
-  const { error } = !existing
-    ? await supabase.from("votes").insert({ post_id: postId, user_id: user.id, value })
-    : existing.value === value
-      ? await supabase.from("votes").delete().eq("id", existing.id)
-      : await supabase.from("votes").update({ value }).eq("id", existing.id);
+  const { error } = existing
+    ? await supabase.from("votes").delete().eq("id", existing.id)
+    : await supabase.from("votes").insert({ post_id: postId, user_id: user.id, value: 1 });
 
-  // A double click can race: the unique constraint keeps it to one vote.
+  // A double click can race: the unique constraint keeps it to one mark.
   if (error && error.code !== UNIQUE_VIOLATION) {
-    return { ok: false, error: "Couldn't save your vote. Try again." };
+    return { ok: false, error: "Couldn't save that. Try again." };
   }
   refresh();
   return { ok: true };

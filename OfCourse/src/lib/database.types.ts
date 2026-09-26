@@ -55,6 +55,20 @@ export type Database = {
           },
         ];
       };
+      course_units: {
+        Row: { id: string; course_id: string; position: number; name: string };
+        Insert: { id?: string; course_id: string; position: number; name: string };
+        Update: Partial<Database["public"]["Tables"]["course_units"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "course_units_course_id_fkey";
+            columns: ["course_id"];
+            isOneToOne: false;
+            referencedRelation: "courses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       post_embeddings: {
         Row: {
           post_id: string;
@@ -340,8 +354,14 @@ export type Database = {
         ];
       };
       topics: {
-        Row: { id: string; course_id: string; name: string } & Timestamps;
-        Insert: { id?: string; course_id: string; name: string; created_at?: string };
+        Row: { id: string; course_id: string; name: string; unit_id: string | null } & Timestamps;
+        Insert: {
+          id?: string;
+          course_id: string;
+          name: string;
+          unit_id?: string | null;
+          created_at?: string;
+        };
         Update: Partial<Database["public"]["Tables"]["topics"]["Insert"]>;
         Relationships: [
           {

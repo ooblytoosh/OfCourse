@@ -26,7 +26,8 @@ type ComposerCourse = {
   code: string;
   name: string;
   university: string;
-  topics: { id: string; name: string }[];
+  // Topics in syllabus order, each labelled with its unit.
+  topics: { id: string; name: string; unit: string }[];
 };
 
 const selectClass =
@@ -45,6 +46,8 @@ type ComposerProps = {
   courses: ComposerCourse[];
   semesters: string[];
   initialCourseId?: string;
+  // Preselected post type, e.g. "experience" from "Write a review".
+  initialType?: string;
   // Editing an existing post: its id and current values. The course is fixed.
   editing?: { postId: string; values: PostFormValues };
 };
@@ -72,6 +75,7 @@ function ComposerForm({
   courses,
   semesters,
   initialCourseId,
+  initialType,
   editing,
   state,
   action,
@@ -136,7 +140,7 @@ function ComposerForm({
           <select
             id="type"
             name="type"
-            defaultValue={values?.type ?? ""}
+            defaultValue={values?.type ?? initialType ?? ""}
             aria-invalid={Boolean(errors.type)}
             className={selectClass}
           >
@@ -186,21 +190,30 @@ function ComposerForm({
         </legend>
         {course ? (
           course.topics.length > 0 ? (
-            <div className="flex flex-wrap gap-2" key={course.id}>
-              {course.topics.map((t) => (
-                <label
-                  key={t.id}
-                  className="cursor-pointer rounded-full border px-3 py-1 text-sm transition-colors select-none has-checked:border-brand has-checked:bg-brand/10 has-checked:text-brand has-focus-visible:ring-3 has-focus-visible:ring-ring/50"
-                >
-                  <input
-                    type="checkbox"
-                    name="topicIds"
-                    value={t.id}
-                    defaultChecked={values?.topicIds.includes(t.id)}
-                    className="sr-only"
-                  />
-                  {t.name}
-                </label>
+            <div className="flex flex-col gap-3" key={course.id}>
+              {[...new Set(course.topics.map((t) => t.unit))].map((unit) => (
+                <div key={unit} className="flex flex-col gap-1.5">
+                  <p className="text-xs font-medium text-muted-foreground">{unit}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {course.topics
+                      .filter((t) => t.unit === unit)
+                      .map((t) => (
+                        <label
+                          key={t.id}
+                          className="cursor-pointer rounded-lg border px-2.5 py-1 text-sm transition-colors select-none has-checked:border-brand has-checked:bg-brand/10 has-checked:text-brand has-focus-visible:ring-3 has-focus-visible:ring-ring/50"
+                        >
+                          <input
+                            type="checkbox"
+                            name="topicIds"
+                            value={t.id}
+                            defaultChecked={values?.topicIds.includes(t.id)}
+                            className="sr-only"
+                          />
+                          {t.name}
+                        </label>
+                      ))}
+                  </div>
+                </div>
               ))}
             </div>
           ) : (

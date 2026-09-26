@@ -5,12 +5,12 @@ import { notFound, redirect } from "next/navigation";
 
 import { CommentForm } from "@/components/post/comment-form";
 import { CommentThread } from "@/components/post/comment-thread";
+import { HelpfulButton } from "@/components/post/helpful-button";
 import { PostMeta } from "@/components/post/post-meta";
 import { PostOwnerActions } from "@/components/post/post-owner-actions";
 import { PostTypeBadge } from "@/components/post/post-type-badge";
 import { SaveButton } from "@/components/post/save-button";
 import { TopicChip } from "@/components/post/topic-chip";
-import { VoteButton } from "@/components/post/vote-button";
 import { getCurrentUser } from "@/lib/auth";
 import { getComments, getPost } from "@/lib/data/posts";
 import { formatCount } from "@/lib/format";
@@ -44,7 +44,7 @@ export default async function PostPage({ params }: PageProps<"/c/[slug]/posts/[p
         className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="size-4" />
-        c/{post.course.slug} · {post.course.name}
+        {post.course.university} · {post.course.code}: {post.course.name}
       </Link>
 
       <article className="rounded-2xl border bg-card p-5 sm:p-7">
@@ -62,20 +62,20 @@ export default async function PostPage({ params }: PageProps<"/c/[slug]/posts/[p
         </div>
 
         {post.topics.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-1.5">
+          <div className="mt-4 flex flex-wrap gap-x-3 gap-y-1">
             {post.topics.map((t) => (
-              <TopicChip key={t.id} courseSlug={post.course.slug} name={t.name} />
+              <TopicChip key={t.id} courseSlug={post.course.slug} name={t.name} postType={post.type} />
             ))}
           </div>
         )}
 
         <div className="mt-6 text-[0.95rem] leading-7 whitespace-pre-line">{post.content}</div>
 
-        <div className="mt-6 -ml-2.5 flex items-center gap-1 border-t pt-3">
-          <VoteButton
+        <div className="mt-6 -ml-2.5 flex flex-wrap items-center gap-1 border-t pt-3">
+          <HelpfulButton
             postId={post.id}
-            vote={post.viewerVote}
-            score={post.voteScore}
+            marked={post.viewerFoundHelpful}
+            count={post.voteScore}
             signedIn={signedIn}
           />
           <span className="px-2.5 text-sm text-muted-foreground">

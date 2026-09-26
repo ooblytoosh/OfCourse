@@ -4,14 +4,14 @@ import type { Metadata } from "next";
 import { PageHeader } from "@/components/page-header";
 import { PostComposer } from "@/components/post/post-composer";
 import { requireUser } from "@/lib/auth";
-import { POST_TYPES, POSTABLE_TYPES, PROHIBITED_CONTENT } from "@/lib/content-policy";
+import { isPostableType, POST_TYPES, POSTABLE_TYPES, PROHIBITED_CONTENT } from "@/lib/content-policy";
 import { getCoursesWithTopics } from "@/lib/data/courses";
 import { semesterOptions } from "@/lib/semesters";
 
 export const metadata: Metadata = { title: "New post" };
 
 export default async function NewPostPage({ searchParams }: PageProps<"/new">) {
-  const { course: courseSlug } = await searchParams;
+  const { course: courseSlug, type } = await searchParams;
   await requireUser(typeof courseSlug === "string" ? `/new?course=${courseSlug}` : "/new");
 
   const courses = await getCoursesWithTopics();
@@ -28,6 +28,7 @@ export default async function NewPostPage({ searchParams }: PageProps<"/new">) {
           courses={courses}
           semesters={semesterOptions()}
           initialCourseId={initialCourse?.id}
+          initialType={typeof type === "string" && isPostableType(type) ? type : undefined}
         />
       </div>
 

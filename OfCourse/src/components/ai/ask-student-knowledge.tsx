@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 
 import { AiAnswer } from "@/components/ai/ai-answer";
@@ -44,12 +44,10 @@ export function AskStudentKnowledge({
   courseId,
   courseCode,
   signedIn,
-  keywordSearchHref,
 }: {
   courseId: string;
   courseCode: string;
   signedIn: boolean;
-  keywordSearchHref: string;
 }) {
   const [question, setQuestion] = useState("");
   const [result, setResult] = useState<AskResult | null>(null);
@@ -117,16 +115,6 @@ export function AskStudentKnowledge({
         </div>
       )}
 
-      <form action={keywordSearchHref} className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-        <Search className="size-3.5" />
-        <label htmlFor="keyword-q">Or filter posts by keyword:</label>
-        <input
-          id="keyword-q"
-          name="q"
-          placeholder="e.g. heaps"
-          className="h-7 w-32 rounded-md border bg-transparent px-2 text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-        />
-      </form>
     </section>
   );
 }
