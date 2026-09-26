@@ -39,17 +39,17 @@ export default async function HomePage() {
   return (
     <div className="flex flex-col gap-10">
       <section className="flex flex-col gap-5 pt-2">
-        <p className="text-sm font-semibold text-brand">Course communities for university students</p>
+        <p className="text-sm font-semibold text-brand">Student-built course knowledge for university students</p>
         <h1 className="max-w-2xl text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
           {siteConfig.tagline}
         </h1>
         <p className="max-w-xl text-lg text-muted-foreground">
-          {siteConfig.description} Every course has a community where students share what
+          {siteConfig.description} Every course has a space where students share what
           they learned, and AI helps you find it.
         </p>
         <div>
           <ButtonLink href="/courses" size="lg" className="h-10 px-5">
-            Explore course communities
+            Explore courses
           </ButtonLink>
         </div>
         <form action="/courses" role="search" className="flex max-w-xl gap-2">
@@ -93,14 +93,14 @@ export default async function HomePage() {
 
       {joined.length > 0 && (
         <section className="flex flex-col gap-3">
-          <h2 className="text-lg font-semibold">Your communities</h2>
+          <h2 className="text-lg font-semibold">Your courses</h2>
           <CourseList courses={joined} />
         </section>
       )}
 
       <section className="flex flex-col gap-3">
         <div className="flex items-baseline justify-between">
-          <h2 className="text-lg font-semibold">Popular communities</h2>
+          <h2 className="text-lg font-semibold">Popular courses</h2>
           <Link href="/courses" className="text-sm font-medium text-muted-foreground hover:text-foreground">
             All courses
           </Link>

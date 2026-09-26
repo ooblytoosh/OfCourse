@@ -1,11 +1,11 @@
 import { MessageSquare } from "lucide-react";
 import Link from "next/link";
 
+import { HelpfulButton } from "@/components/post/helpful-button";
 import { PostMeta } from "@/components/post/post-meta";
 import { PostTypeBadge } from "@/components/post/post-type-badge";
 import { SaveButton } from "@/components/post/save-button";
 import { TopicChip } from "@/components/post/topic-chip";
-import { VoteButton } from "@/components/post/vote-button";
 import type { PostSummary } from "@/lib/data/posts";
 import { preview } from "@/lib/format";
 
@@ -29,9 +29,9 @@ export function PostCard({
         {showCourse && (
           <Link
             href={`/c/${post.course.slug}`}
-            className="relative z-10 text-xs font-semibold hover:underline"
+            className="relative z-10 text-xs font-semibold text-muted-foreground hover:text-foreground hover:underline"
           >
-            c/{post.course.slug}
+            {post.course.code}
           </Link>
         )}
       </div>
@@ -54,18 +54,18 @@ export function PostCard({
       <p className="mt-3 line-clamp-3 text-sm text-muted-foreground">{preview(post.content, 320)}</p>
 
       {post.topics.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-1.5">
+        <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1">
           {post.topics.map((t) => (
-            <TopicChip key={t.id} courseSlug={post.course.slug} name={t.name} />
+            <TopicChip key={t.id} courseSlug={post.course.slug} name={t.name} postType={post.type} />
           ))}
         </div>
       )}
 
-      <div className="mt-3 -ml-2.5 flex items-center gap-1">
-        <VoteButton
+      <div className="mt-3 -ml-2.5 flex flex-wrap items-center gap-1">
+        <HelpfulButton
           postId={post.id}
-          vote={post.viewerVote}
-          score={post.voteScore}
+          marked={post.viewerFoundHelpful}
+          count={post.voteScore}
           signedIn={signedIn}
         />
         <Link

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowBigUp, Info, Sparkles } from "lucide-react";
+import { Info, Lightbulb, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { Fragment, useState } from "react";
 
@@ -97,9 +97,8 @@ export function SourceCard({ source, index }: { source: AskSource; index?: numbe
         <span>{source.course.code}</span>
         {source.semester && <span>· {source.semester}</span>}
         <span className="inline-flex items-center">
-          · <ArrowBigUp className="ml-0.5 size-3.5" aria-hidden />
-          {source.voteScore}
-          <span className="sr-only">votes</span>
+          · <Lightbulb className="ml-0.5 size-3.5" aria-hidden />
+          {source.voteScore} helpful
         </span>
       </div>
     </li>
@@ -129,7 +128,7 @@ export function AiAnswer({ result, onReset }: { result: AskResult; onReset: () =
         <div className="rounded-lg bg-muted p-3 text-sm">
           <p className="font-medium">I couldn&apos;t find enough student-created content for this question yet.</p>
           <p className="mt-1 text-muted-foreground">
-            Try browsing the course discussions below, or ask the community by{" "}
+            Try the Study Threads and Resources tabs below, or ask other students by{" "}
             <Link href="/new" className="font-medium text-foreground underline-offset-4 hover:underline">
               creating a post
             </Link>

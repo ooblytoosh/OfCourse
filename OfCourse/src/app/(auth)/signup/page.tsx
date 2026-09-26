@@ -23,8 +23,8 @@ export default async function SignupPage() {
         <CardHeader>
           <CardTitle className="text-xl">Join OfCourse</CardTitle>
           <CardDescription>
-            Sign up with your university email to join your school&apos;s course communities as
-            a verified student.
+            Sign up with your university email to join your school&apos;s courses as a verified
+            student.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">

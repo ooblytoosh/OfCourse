@@ -55,27 +55,32 @@ the AI panel says AI search isn't set up.
 
 ## Demo
 
-Seeded data: Georgia Tech with **CS 1332** (24 posts), CS 2110 and MATH 1554,
+Seeded data: Georgia Tech with **CS 1332** (27 posts), CS 2110 and MATH 1554,
 30 fictional verified demo students (no passwords; nobody can sign in as them),
-comments, up/down votes and course ratings. All content is original and
+syllabus units, comments, helpful votes, course ratings and written reviews. All content is original and
 fictional, not real course material.
 
 For the demo, use your own account and verify it with a `@gatech.edu` email
 (sign up with it, or **Settings → University verification**), so your posts
 show the verified badge.
 
-**Golden path (2–3 min):** home page → search "CS 1332" → open c/cs1332 → Hot /
-New / Top and the **Trees** filter → open a post → click the author → back to
-CS 1332 → ask *"I'm struggling with AVL rotations. Can someone explain why they
-work?"* → read the synthesis → click a source → open the contributor's profile.
+**Golden path (2–3 min):** home page → search "CS 1332" → open the course (stats
+banner, **Course Reviews & Stats**) → **Resources & Topics** by unit → open a post
+→ click the author → back to CS 1332 → ask *"I'm struggling with AVL rotations.
+Can someone explain why they work?"* → read the synthesis → click a source → open
+the contributor's profile.
 
 ## Features
 
-- **Course communities** (`/c/cs1332`): join, Hot/New/Top, topic filters,
-  keyword filter, course ratings (averages only), up/down votes, saves.
+- **Course pages** (`/c/cs1332`): title with a stats banner (workload,
+  difficulty, would take again, verified students) and three tabs:
+  **Course Reviews & Stats** (rate the course; written reviews),
+  **Study Threads & Advice** (Hot / New / Most helpful) and **Resources &
+  Topics** (notes, guides and explanations organized by syllabus unit). Topic
+  filters are grouped by unit; posts can be marked **Helpful** and saved.
 - **Posts:** types (discussion, study advice, notes, study guide, concept
-  explanation), topics, semester, required academic-integrity confirmation,
-  two-level comments, edit/delete your own posts and comments.
+  explanation, course review), topics, semester, required academic-integrity
+  confirmation, two-level comments, edit/delete your own posts and comments.
 - **Profiles** (`/u/<username>`): contributions, courses, helpful votes, photo,
   university badge.
 - **University verification:** the university is derived from an email the

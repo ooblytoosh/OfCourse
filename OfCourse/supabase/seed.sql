@@ -645,18 +645,16 @@ order by dc.n
 on conflict (id) do nothing;
 
 -- ---------------------------------------------------------------------------
--- Votes: a deterministic pseudo-random subset of students upvotes each post,
--- sized by the post's popularity.
+-- Helpful votes: a deterministic pseudo-random subset of students marks each
+-- post helpful, sized by the post's popularity.
 -- ---------------------------------------------------------------------------
 
 insert into public.votes (post_id, user_id, value)
-select pg_temp.demo_id('e', p.n), pg_temp.demo_id('d', d.n),
-       case when abs(hashtext(p.n::text || '-' || d.n::text)) % 100 < p.popularity then 1 else -1 end
+select pg_temp.demo_id('e', p.n), pg_temp.demo_id('d', d.n), 1
 from demo_posts p
 cross join demo_users d
 where d.n <> p.author
-  and (abs(hashtext(p.n::text || '-' || d.n::text)) % 100 < p.popularity
-       or abs(hashtext(p.n::text || '-' || d.n::text)) % 100 >= 96)
+  and abs(hashtext(p.n::text || '-' || d.n::text)) % 100 < p.popularity
 on conflict (post_id, user_id) do nothing;
 
 -- ---------------------------------------------------------------------------
@@ -676,5 +674,107 @@ join (values ('cs1332', 12, 8, 72), ('cs2110', 14, 8, 66), ('math1554', 8, 6, 70
   as r (slug, hours, difficulty, again) on r.slug = c.slug
 where m.user_id::text like 'd0000000-%'
 on conflict (user_id, course_id) do nothing;
+
+-- ---------------------------------------------------------------------------
+-- Syllabus units (topics grouped in course order)
+-- ---------------------------------------------------------------------------
+
+insert into public.course_units (course_id, position, name)
+select c.id, u.position, u.name
+from public.courses c
+join (values
+  ('cs1332', 1, 'Foundations'),
+  ('cs1332', 2, 'Trees'),
+  ('cs1332', 3, 'Hashing & Sorting'),
+  ('cs1332', 4, 'Graphs'),
+  ('cs1332', 5, 'Algorithm Design'),
+  ('cs2110', 1, 'Digital Logic'),
+  ('cs2110', 2, 'LC-3 & Assembly'),
+  ('cs2110', 3, 'C Programming'),
+  ('math1554', 1, 'Linear Systems'),
+  ('math1554', 2, 'Linear Transformations'),
+  ('math1554', 3, 'Determinants'),
+  ('math1554', 4, 'Eigenvalues')
+) as u (slug, position, name) on u.slug = c.slug
+on conflict (course_id, position) do update set name = excluded.name;
+
+update public.topics t
+set unit_id = cu.id
+from (values
+  ('cs1332', 'Big-O', 1), ('cs1332', 'Recursion', 1), ('cs1332', 'Linked Lists', 1),
+  ('cs1332', 'Trees', 2), ('cs1332', 'BSTs', 2), ('cs1332', 'AVL Trees', 2), ('cs1332', 'Heaps', 2),
+  ('cs1332', 'Hashing', 3), ('cs1332', 'Sorting', 3),
+  ('cs1332', 'Graphs', 4), ('cs1332', 'BFS', 4), ('cs1332', 'DFS', 4),
+  ('cs1332', 'Dynamic Programming', 5),
+  ('cs2110', 'Digital Logic', 1), ('cs2110', 'LC-3', 2), ('cs2110', 'Assembly', 2),
+  ('cs2110', 'C', 3), ('cs2110', 'Pointers', 3),
+  ('math1554', 'Row Reduction', 1), ('math1554', 'Transformations', 2),
+  ('math1554', 'Determinants', 3), ('math1554', 'Eigenvalues', 4)
+) as m (slug, topic, position)
+join public.courses c on c.slug = m.slug
+join public.course_units cu on cu.course_id = c.id and cu.position = m.position
+where t.course_id = c.id and t.name = m.topic;
+
+-- ---------------------------------------------------------------------------
+-- Course reviews (fictional, original)
+-- ---------------------------------------------------------------------------
+
+insert into public.posts
+  (id, course_id, author_id, title, content, type, semester, integrity_attested_at, created_at, updated_at)
+select ('e0000000-0000-4000-8000-' || lpad(r.n::text, 12, '0'))::uuid, c.id,
+       ('d0000000-0000-4000-8000-' || lpad(r.author::text, 12, '0'))::uuid,
+       r.title, r.content, 'experience', r.semester,
+       now() - r.days_ago * interval '1 day', now() - r.days_ago * interval '1 day',
+       now() - r.days_ago * interval '1 day'
+from (values
+(34, 'cs1332', 7, 'Hard, but the most useful class I''ve taken so far',
+'Workload: about 12 to 15 hours a week, more during the tree unit.
+
+What went well: the course builds steadily. Once linked lists and recursion made sense, trees felt like a natural next step, and graphs built on both.
+
+What was hard: the coding assignments have a lot of edge cases, and it''s easy to underestimate them. I lost more points to missed edge cases than to wrong ideas.
+
+Would I take it again? Yes. I use what I learned here in every CS class since. Start early, test your own code, and it''s very doable.',
+'Fall 2025', 95, 66),
+(35, 'cs1332', 12, 'Fair workload if you start assignments early',
+'I took this alongside two other technical classes and it was manageable, but only because I started every assignment the day it came out.
+
+The difficulty comes in waves. The first few weeks feel fine, the tree and heap weeks are the steepest, and hashing and sorting felt lighter. Graphs picked the intensity back up at the end.
+
+If you like understanding why things work, you''ll enjoy it. If you try to memorize complexities without the reasoning, it gets painful fast.',
+'Spring 2026', 21, 52),
+(36, 'cs1332', 23, 'The tree weeks were brutal, everything else was steady',
+'Honest take: most of the semester felt steady and fair, but the stretch covering BSTs, AVL trees and heaps took over my life for a couple of weeks.
+
+What helped: drawing every operation by hand, going to office hours with specific failing cases, and a weekly study group.
+
+I''d still recommend it. It''s a hard class, but the difficulty feels earned rather than random.',
+'Summer 2026', 7, 38),
+(37, 'cs2110', 26, 'Challenging, but it changed how I think about code',
+'Going from high-level languages down to logic gates, assembly and C was a big shift. The LC-3 section was the steepest learning curve for me, and pointers in C took a while to click.
+
+Workload was heavier than I expected, around 14 hours a week. Starting projects early and stepping through code in the simulator made the biggest difference.
+
+Would take again: yes. Understanding what actually happens under the hood made me a better programmer.',
+'Fall 2025', 80, 55),
+(38, 'math1554', 6, 'Manageable if you keep up with practice problems',
+'Linear algebra rewards consistency more than cramming. The concepts build on each other, so falling behind on row reduction made eigenvalues much harder later.
+
+My routine: do practice problems a few days a week and check every row operation carefully. Most of my mistakes were arithmetic, not concepts.
+
+Around 8 hours a week for me. Recommended, especially if you''re heading into CS or engineering.',
+'Spring 2026', 30, 45)
+) as r (n, slug, author, title, content, semester, days_ago, popularity)
+join public.courses c on c.slug = r.slug
+on conflict (id) do nothing;
+
+insert into public.votes (post_id, user_id, value)
+select ('e0000000-0000-4000-8000-' || lpad(p.n::text, 12, '0'))::uuid,
+       ('d0000000-0000-4000-8000-' || lpad(d.n::text, 12, '0'))::uuid, 1
+from (values (34, 7, 66), (35, 12, 52), (36, 23, 38), (37, 26, 55), (38, 6, 45)) as p (n, author, popularity)
+cross join generate_series(1, 30) as d (n)
+where d.n <> p.author
+  and abs(hashtext(p.n::text || '-' || d.n::text)) % 100 < p.popularity
+on conflict (post_id, user_id) do nothing;
 
 commit;

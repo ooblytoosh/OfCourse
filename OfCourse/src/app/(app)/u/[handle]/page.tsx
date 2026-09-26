@@ -1,4 +1,4 @@
-import { ArrowBigUp, BadgeAlert, Bookmark, MessageSquare, PenLine } from "lucide-react";
+import { BadgeAlert, Bookmark, Lightbulb, MessageSquare, PenLine } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -136,10 +136,10 @@ export default async function ProfilePage({ params }: PageProps<"/u/[handle]">) 
                       <span className="line-clamp-3 font-medium leading-snug">{post.title}</span>
                       <span className="mt-auto flex items-center gap-3 text-sm text-muted-foreground">
                         <span className="inline-flex items-center gap-0.5">
-                          <ArrowBigUp className="size-4" />
-                          {post.voteScore}
+                          <Lightbulb className="size-4" aria-hidden />
+                          {post.voteScore} helpful
                         </span>
-                        <span>c/{post.course.slug}</span>
+                        <span>{post.course.code}</span>
                       </span>
                     </Link>
                   </li>
@@ -182,7 +182,7 @@ export default async function ProfilePage({ params }: PageProps<"/u/[handle]">) 
                       <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                         <MessageSquare className="size-3.5" />
                         on <span className="font-medium text-foreground">{c.post.title}</span>
-                        · c/{c.post.course.slug} · {timeAgo(c.createdAt)}
+                        · {c.post.course.code} · {timeAgo(c.createdAt)}
                       </span>
                       <span className="text-sm">{preview(c.content, 200)}</span>
                     </Link>

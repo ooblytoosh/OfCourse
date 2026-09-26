@@ -22,7 +22,7 @@ export function CourseList({ courses }: { courses: CourseListItem[] }) {
                 {course.code} · {course.name}
               </span>
               <span className="block text-xs text-muted-foreground">
-                {formatCount(course.memberCount, "member")} · {formatCount(course.postCount, "post")}
+                {formatCount(course.memberCount, "student")} · {formatCount(course.postCount, "post")}
               </span>
             </span>
             <ChevronRight className="size-4 shrink-0 text-muted-foreground" />

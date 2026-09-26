@@ -17,8 +17,8 @@ export const POST_TYPES: Record<PostType, { label: string; description: string }
   note: { label: "Notes", description: "Your own notes from the course" },
   study_guide: { label: "Study Guide", description: "A guide you wrote yourself" },
   explanation: { label: "Concept Explanation", description: "A concept, explained your way" },
+  experience: { label: "Course Review", description: "How the course went for you: workload, difficulty, tips" },
   // Reserved in the database for later; not offered in the composer yet.
-  experience: { label: "Course Experience", description: "What taking the course was like" },
   resource: { label: "Resource", description: "Public tools, videos, and links" },
 };
 
@@ -29,7 +29,22 @@ export const POSTABLE_TYPES = [
   "note",
   "study_guide",
   "explanation",
+  "experience",
 ] as const satisfies readonly PostType[];
+
+// Course page tabs and the post types each one shows.
+export const COURSE_TABS = {
+  reviews: { label: "Course Reviews & Stats", types: ["experience"] },
+  threads: { label: "Study Threads & Advice", types: ["discussion", "advice"] },
+  resources: { label: "Resources & Topics", types: ["note", "study_guide", "explanation", "resource"] },
+} as const satisfies Record<string, { label: string; types: readonly PostType[] }>;
+
+export type CourseTab = keyof typeof COURSE_TABS;
+export const COURSE_TAB_ORDER: CourseTab[] = ["reviews", "threads", "resources"];
+
+export function tabForPostType(type: PostType): CourseTab {
+  return COURSE_TAB_ORDER.find((tab) => (COURSE_TABS[tab].types as readonly PostType[]).includes(type)) ?? "threads";
+}
 
 export function isPostableType(value: string): value is (typeof POSTABLE_TYPES)[number] {
   return (POSTABLE_TYPES as readonly string[]).includes(value);
