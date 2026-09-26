@@ -45,7 +45,18 @@ the AI panel says AI search isn't set up.
    Redirect URLs.
 4. **Authentication → Sign In / Providers → Email:** keep **Confirm email** on
    so signing up with a university email verifies the student.
-5. Generate AI search embeddings for the seeded posts:
+   Supabase's built-in email sender is rate-limited (a few emails an hour); for
+   real use, set up custom SMTP under **Authentication → Emails → SMTP Settings**.
+5. **Authentication → Emails → Templates:** students verify by typing a
+   6-digit code, so add the code to the **Confirm signup**, **Magic Link** and
+   **Change Email Address** templates, for example:
+
+   ```html
+   <h2>Your OfCourse code</h2>
+   <p>Enter this code to confirm your email: <strong>{{ .Token }}</strong></p>
+   <p>Or <a href="{{ .ConfirmationURL }}">confirm with this link</a>.</p>
+   ```
+6. Generate AI search embeddings for the seeded posts:
 
    ```bash
    npm run embed:posts            # skips posts that are already up to date
@@ -63,6 +74,10 @@ fictional, not real course material.
 For the demo, use your own account and verify it with a `@gatech.edu` email
 (sign up with it, or **Settings → University verification**), so your posts
 show the verified badge.
+
+**Sign-up path:** sign up with a `@gatech.edu` email → type the 6-digit code
+from the email → **Welcome** screen (intro + terms; "Agree and continue" unlocks
+once the box is checked) → home.
 
 **Golden path (2–3 min):** home page → search "CS 1332" → open the course (stats
 banner, **Course Reviews & Stats**) → **Resources & Topics** by unit → open a post
@@ -83,11 +98,20 @@ the contributor's profile.
   confirmation, two-level comments, edit/delete your own posts and comments.
 - **Profiles** (`/u/<username>`): contributions, courses, helpful votes, photo,
   university badge.
+- **Sign-up and onboarding:** after signing up, students enter the 6-digit code
+  emailed to them (`/verify`), then see `/welcome`: a short intro and the
+  OfCourse terms (`/terms`, text in `src/lib/terms.ts`). Nobody can use the app
+  until they agree; the time they agreed is stored in
+  `profiles.terms_accepted_at` (set only through the `accept_terms()` function).
 - **University verification:** the university is derived from an email the
-  student proved they own via Supabase Auth. Clients can never set `verified`
-  or `university_id` (column permissions + a guard trigger).
-- **AI search ("Ask the student knowledge")**: course-scoped retrieval over
-  student posts, then a short synthesis citing them.
+  student proved they own via Supabase Auth (the sign-up code, or a code sent
+  from **Settings**; the emailed link also works). Clients can never set
+  `verified` or `university_id` (column permissions + a guard trigger).
+- **AI chat ("Ask about CS 1332")**: course-scoped retrieval over student
+  posts, then a short synthesis citing them. Chats are saved per student and
+  course (`ai_conversations`, `ai_messages`, private to their owner): follow-ups
+  remember the last 3 turns, and students can reopen past chats, start a new
+  one or delete one.
 
 ## AI search architecture
 
@@ -105,6 +129,10 @@ question ──► embedding ──► match_course_posts(course_id) ──► p
 - Sources are the database records that were retrieved. The model only cites
   them by number; the app builds the links, drops unknown numbers and strips
   any URL the model writes.
+- Follow-ups: the last 3 question/answer pairs are sent as context (old
+  answers without their citations), and the previous question is added to the
+  search text so "what about double rotations?" still finds AVL posts. Only the
+  newest sources can be cited.
 - New/edited posts are re-embedded in the background only when their text
   changes. Signed-in students only; 30 questions per student per hour.
 

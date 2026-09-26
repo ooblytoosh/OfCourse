@@ -47,7 +47,7 @@ export default async function PostPage({ params }: PageProps<"/c/[slug]/posts/[p
         {post.course.university} · {post.course.code}: {post.course.name}
       </Link>
 
-      <article className="rounded-2xl border bg-card p-5 sm:p-7">
+      <article className="surface p-5 sm:p-7">
         <PostTypeBadge type={post.type} />
         <h1 className="mt-3 text-2xl leading-tight font-semibold tracking-tight sm:text-3xl">
           {post.title}

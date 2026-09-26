@@ -3,9 +3,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { AskStudentKnowledge } from "@/components/ai/ask-student-knowledge";
+import { CourseChat } from "@/components/ai/course-chat";
 import { CourseHeader } from "@/components/course/course-header";
-import { CourseSidebar } from "@/components/course/course-sidebar";
 import { CourseTabs } from "@/components/course/course-tabs";
 import { FeedControls, feedHref } from "@/components/course/feed-controls";
 import { ResourcesByUnit } from "@/components/course/resources-by-unit";
@@ -14,6 +13,7 @@ import { EmptyState } from "@/components/empty-state";
 import { PostCard } from "@/components/post/post-card";
 import { getCurrentUser } from "@/lib/auth";
 import { COURSE_TAB_ORDER, COURSE_TABS, type CourseTab } from "@/lib/content-policy";
+import { getChatTurns, listChats } from "@/lib/data/ai-chats";
 import { getCourse, getCourseTopics, getCourseUnits } from "@/lib/data/courses";
 import { FEED_SORTS, getCourseFeed, getPostTypeCounts, type FeedSort } from "@/lib/data/posts";
 import { slugify } from "@/lib/format";
@@ -65,6 +65,14 @@ export default async function CoursePage({ params, searchParams }: PageProps<"/c
     ]),
   ) as Record<CourseTab, number>;
 
+  // Your saved chats in this course; the most recent one reopens.
+  const chats = user ? await listChats(course.id) : [];
+  const chatTurns = user && chats[0] ? await getChatTurns(chats[0].id, user.id) : [];
+  const suggestions = [
+    `How do students recommend studying for ${course.code}?`,
+    ...topics.slice(0, 2).map((t) => `Can someone explain ${t.name}?`),
+  ];
+
   const posts = await getCourseFeed({
     courseId: course.id,
     types: COURSE_TABS[tab].types,
@@ -93,10 +101,18 @@ export default async function CoursePage({ params, searchParams }: PageProps<"/c
     <div className="flex flex-col gap-6">
       <CourseHeader course={course} signedIn={signedIn} />
 
-      <AskStudentKnowledge courseId={course.id} courseCode={course.code} signedIn={signedIn} />
+      <CourseChat
+        key={course.id}
+        courseId={course.id}
+        courseCode={course.code}
+        signedIn={signedIn}
+        suggestions={suggestions}
+        initialChats={chats}
+        initialChatId={chats[0]?.id ?? null}
+        initialTurns={chatTurns}
+      />
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_260px]">
-        <div className="flex min-w-0 flex-col gap-4">
+      <div className="flex min-w-0 flex-col gap-4">
           <CourseTabs slug={course.slug} active={tab} counts={counts} />
 
           {tab === "reviews" ? (
@@ -141,11 +157,6 @@ export default async function CoursePage({ params, searchParams }: PageProps<"/c
               )}
             </>
           )}
-        </div>
-
-        <aside>
-          <CourseSidebar course={course} units={units} />
-        </aside>
       </div>
     </div>
   );

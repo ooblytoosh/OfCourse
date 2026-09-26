@@ -20,6 +20,10 @@ export const AI_LIMITS = {
   maxSources: 8,
   // Characters of each post sent to the model (keeps prompts small).
   sourceChars: 1500,
+  // Earlier chat turns sent with a follow-up question, and how much of each
+  // earlier answer is included.
+  historyTurns: 3,
+  historyAnswerChars: 1200,
   // Characters of a post that get embedded.
   documentChars: 6000,
   // Minimum cosine similarity for a post to count as relevant. Calibrated for

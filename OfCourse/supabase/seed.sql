@@ -146,6 +146,7 @@ set username = d.username,
     university_id = (select id from public.universities where domain = 'gatech.edu'),
     verified = true,
     verified_at = coalesce(p.verified_at, now() - interval '300 days'),
+    terms_accepted_at = coalesce(p.terms_accepted_at, now() - interval '300 days'),
     created_at = least(p.created_at, now() - interval '400 days' + d.n * interval '3 days')
 from demo_users d
 where p.id = pg_temp.demo_id('d', d.n);

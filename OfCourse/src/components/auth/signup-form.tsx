@@ -1,6 +1,5 @@
 "use client";
 
-import { MailCheck } from "lucide-react";
 import { useActionState, useState } from "react";
 
 import { signUp, type SignupState } from "@/app/(auth)/actions";
@@ -30,16 +29,6 @@ export function SignupForm({
   gradYears: number[];
 }) {
   const [state, action, pending] = useActionState<SignupState, FormData>(signUp, undefined);
-
-  if (state?.message) {
-    return (
-      <div className="flex flex-col items-center gap-3 py-4 text-center" role="status">
-        <MailCheck className="size-10 text-brand" />
-        <p className="font-medium">Check your inbox</p>
-        <p className="text-sm text-muted-foreground">{state.message}</p>
-      </div>
-    );
-  }
 
   // Remount the fields after each server response so they start from the
   // submitted values (React resets forms after an action).

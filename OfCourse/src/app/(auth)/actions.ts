@@ -59,7 +59,6 @@ export type SignupState =
   | {
       errors?: Partial<Record<keyof SignupValues | "password" | "form", string>>;
       values?: SignupValues;
-      message?: string;
       attempt: number;
     }
   | undefined;
@@ -143,22 +142,87 @@ export async function signUp(_prev: SignupState, formData: FormData): Promise<Si
         major: values.major || null,
         grad_year: values.gradYear || null,
       },
-      emailRedirectTo: `${siteUrl}/auth/confirm?next=/profile`,
+      emailRedirectTo: `${siteUrl}/auth/confirm?next=/welcome`,
     },
   });
   if (error) return fail({ form: error.message });
 
-  // Email confirmation is turned off in Supabase: the user is signed in, but
-  // not verified. Send them to finish verification.
-  if (data.session) redirect("/settings?welcome=1#verification");
+  const verifyUrl = (mode: CodeMode) =>
+    `/verify?${new URLSearchParams({ email: values.email, mode })}`;
 
-  return {
-    message:
-      values.universityId === UNLISTED_UNIVERSITY
-        ? `Check ${values.email} for a link to confirm your account.`
-        : `Check ${values.email} for a confirmation link. Opening it verifies your university email.`,
-    attempt: Date.now(),
-  };
+  if (!data.session) {
+    // Email confirmation is on: Supabase emailed a sign-up code.
+    redirect(verifyUrl("signup"));
+  }
+
+  // Email confirmation is off: the account is signed in but not verified yet.
+  // Email a sign-in code to prove the university address.
+  if (values.universityId === UNLISTED_UNIVERSITY) redirect("/welcome");
+  await supabase.auth.signInWithOtp({ email: values.email, options: { shouldCreateUser: false } });
+  redirect(verifyUrl("email"));
+}
+
+// Which kind of emailed code is being entered:
+//   signup        confirms a new account (Supabase "Confirm signup" email)
+//   email         proves an existing account owns its address ("Magic Link" email)
+//   email_change  confirms a new address from Settings ("Change Email Address" email)
+export type CodeMode = "signup" | "email" | "email_change";
+const CODE_MODES: CodeMode[] = ["signup", "email", "email_change"];
+
+export type CodeFormState = { error?: string; resent?: boolean; attempt: number } | undefined;
+
+// Checks a code from a Supabase email. A correct code signs the student in
+// (or confirms their new address), and the database then verifies their
+// university from the proven email domain.
+export async function verifyEmailCode(_prev: CodeFormState, formData: FormData): Promise<CodeFormState> {
+  const fail = (error: string): CodeFormState => ({ error, attempt: Date.now() });
+  if (!isSupabaseConfigured()) return fail(NOT_CONFIGURED!.error!);
+
+  const email = field(formData, "email").toLowerCase();
+  const code = field(formData, "code").replace(/\s+/g, "");
+  const mode = CODE_MODES.includes(field(formData, "mode") as CodeMode)
+    ? (field(formData, "mode") as CodeMode)
+    : "signup";
+  const next = safeRedirectPath(field(formData, "next") || "/welcome");
+  if (!email) return fail("Missing email address. Start again from sign up.");
+  if (!/^\d{6,10}$/.test(code)) return fail("Enter the code from the email (just the numbers).");
+
+  const supabase = await createClient();
+  // Sign-up and sign-in codes are interchangeable from the student's point of
+  // view, so try the expected kind first and the other one second.
+  const types: CodeMode[] =
+    mode === "email_change" ? ["email_change"] : mode === "signup" ? ["signup", "email"] : ["email", "signup"];
+  let verified = false;
+  for (const type of types) {
+    const { error } = await supabase.auth.verifyOtp({ email, token: code, type });
+    if (!error) {
+      verified = true;
+      break;
+    }
+  }
+  if (!verified) return fail("That code didn't work. Check it, or send a new one.");
+
+  await supabase.rpc("claim_university_verification");
+  redirect(next);
+}
+
+export async function resendEmailCode(email: string, mode: CodeMode): Promise<{ ok: boolean; message: string }> {
+  if (!isSupabaseConfigured() || !email) return { ok: false, message: "Couldn't send a new code." };
+  const supabase = await createClient();
+  const { error } =
+    mode === "signup"
+      ? await supabase.auth.resend({ type: "signup", email })
+      : mode === "email_change"
+        ? await supabase.auth.resend({ type: "email_change", email })
+        : await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
+  if (error) {
+    const wait = /rate|seconds|security purposes/i.test(error.message);
+    return {
+      ok: false,
+      message: wait ? "Please wait a minute before asking for another code." : "Couldn't send a new code.",
+    };
+  }
+  return { ok: true, message: `New code sent to ${email}.` };
 }
 
 export async function signOut() {

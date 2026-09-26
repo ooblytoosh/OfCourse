@@ -3,6 +3,7 @@ import Link from "next/link";
 import { COURSE_TAB_ORDER, COURSE_TABS, type CourseTab } from "@/lib/content-policy";
 import { cn } from "@/lib/utils";
 
+// Segmented switcher between the course's three sections.
 export function CourseTabs({
   slug,
   active,
@@ -13,8 +14,8 @@ export function CourseTabs({
   counts: Record<CourseTab, number>;
 }) {
   return (
-    <nav aria-label="Course sections" className="-mx-1 overflow-x-auto border-b">
-      <ul className="flex min-w-max gap-1 px-1">
+    <nav aria-label="Course sections" className="max-w-full overflow-x-auto">
+      <ul className="inline-flex min-w-max gap-1 rounded-xl bg-muted p-1">
         {COURSE_TAB_ORDER.map((tab) => {
           const isActive = tab === active;
           return (
@@ -22,15 +23,16 @@ export function CourseTabs({
               <Link
                 href={`/c/${slug}?tab=${tab}`}
                 aria-current={isActive ? "page" : undefined}
+                scroll={false}
                 className={cn(
-                  "-mb-px flex items-center gap-2 border-b-2 px-3 pt-1 pb-3 text-sm font-medium transition-colors",
+                  "flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium transition-all duration-200",
                   isActive
-                    ? "border-foreground text-foreground"
-                    : "border-transparent text-muted-foreground hover:text-foreground",
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 {COURSE_TABS[tab].label}
-                <span className="rounded-full bg-muted px-1.5 text-xs text-muted-foreground tabular-nums">
+                <span className={cn("text-xs tabular-nums", isActive ? "text-brand" : "opacity-70")}>
                   {counts[tab]}
                 </span>
               </Link>

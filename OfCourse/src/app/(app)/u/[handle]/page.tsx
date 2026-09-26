@@ -4,9 +4,11 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { ButtonLink } from "@/components/button-link";
+import { CourseCard } from "@/components/course/course-card";
 import { EmptyState } from "@/components/empty-state";
 import { PostCard } from "@/components/post/post-card";
 import { PostTypeBadge } from "@/components/post/post-type-badge";
+import { SectionTitle } from "@/components/section-title";
 import { UserAvatar } from "@/components/user-avatar";
 import { VerifiedBadge } from "@/components/verified-badge";
 import { getCurrentUser } from "@/lib/auth";
@@ -27,19 +29,14 @@ function Stat({ value, label, href }: { value: number; label: string; href?: str
     </>
   );
   return href ? (
-    <Link href={href} className="rounded-xl border bg-card p-4 transition-colors hover:border-foreground/20">
+    <Link href={href} className="surface surface-interactive p-4">
       {body}
     </Link>
   ) : (
-    <div className="rounded-xl border bg-card p-4">{body}</div>
+    <div className="surface p-4">{body}</div>
   );
 }
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <h2 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">{children}</h2>
-  );
-}
 
 export default async function ProfilePage({ params }: PageProps<"/u/[handle]">) {
   const { handle } = await params;
@@ -59,7 +56,7 @@ export default async function ProfilePage({ params }: PageProps<"/u/[handle]">) 
 
   return (
     <div className="flex flex-col gap-8">
-      <header className="flex flex-col gap-5 rounded-2xl border bg-card p-6 sm:flex-row sm:items-start">
+      <header className="surface flex flex-col gap-5 p-6 sm:flex-row sm:items-start">
         <UserAvatar
           author={{ id: profile.id, name: displayName, username: profile.username, avatar_url: profile.avatarUrl, verified: profile.verified, university: null }}
           className="size-20 text-2xl [&_[data-slot=avatar-fallback]]:text-xl"
@@ -125,17 +122,17 @@ export default async function ProfilePage({ params }: PageProps<"/u/[handle]">) 
           {featured.length > 0 && (
             <section className="flex flex-col gap-3">
               <SectionTitle>Featured contributions</SectionTitle>
-              <ul className="grid gap-3 sm:grid-cols-3">
+              <ul className="grid gap-3 sm:grid-cols-2">
                 {featured.map((post) => (
                   <li key={post.id}>
                     <Link
                       href={`/c/${post.course.slug}/posts/${post.id}`}
-                      className="flex h-full flex-col gap-2 rounded-xl border bg-card p-4 transition-colors hover:border-foreground/20"
+                      className="surface surface-interactive flex h-full flex-col gap-2 p-4"
                     >
                       <PostTypeBadge type={post.type} />
                       <span className="line-clamp-3 font-medium leading-snug">{post.title}</span>
-                      <span className="mt-auto flex items-center gap-3 text-sm text-muted-foreground">
-                        <span className="inline-flex items-center gap-0.5">
+                      <span className="mt-auto flex items-center gap-3 text-sm whitespace-nowrap text-muted-foreground">
+                        <span className="inline-flex items-center gap-1">
                           <Lightbulb className="size-4" aria-hidden />
                           {post.voteScore} helpful
                         </span>
@@ -149,7 +146,7 @@ export default async function ProfilePage({ params }: PageProps<"/u/[handle]">) 
           )}
 
           <section className="flex flex-col gap-3">
-            <SectionTitle>Posts · {activity.posts.length}</SectionTitle>
+            <SectionTitle count={activity.posts.length}>Posts</SectionTitle>
             {activity.posts.length > 0 ? (
               <div className="flex flex-col gap-3">
                 {activity.posts.map((post) => (
@@ -172,7 +169,7 @@ export default async function ProfilePage({ params }: PageProps<"/u/[handle]">) 
           {activity.comments.length > 0 && (
             <section className="flex flex-col gap-3">
               <SectionTitle>Recent comments</SectionTitle>
-              <ul className="divide-y rounded-xl border bg-card">
+              <ul className="surface divide-y">
                 {activity.comments.map((c) => (
                   <li key={c.id}>
                     <Link
@@ -199,18 +196,12 @@ export default async function ProfilePage({ params }: PageProps<"/u/[handle]">) 
             <ul className="flex flex-col gap-2">
               {activity.courses.map((course) => (
                 <li key={course.slug}>
-                  <Link
-                    href={`/c/${course.slug}`}
-                    className="flex flex-col rounded-xl border bg-card p-4 transition-colors hover:border-foreground/20"
-                  >
-                    <span className="font-semibold">{course.code}</span>
-                    <span className="text-sm">{course.name}</span>
-                    <span className="mt-1 text-xs text-muted-foreground">
-                      {[course.semester, formatCount(course.contributions, "contribution")]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </span>
-                  </Link>
+                  <CourseCard
+                    course={course}
+                    meta={[course.semester, formatCount(course.contributions, "contribution")]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  />
                 </li>
               ))}
             </ul>

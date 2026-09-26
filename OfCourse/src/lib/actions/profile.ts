@@ -92,19 +92,31 @@ export async function updateProfile(
 }
 
 export type VerificationState =
-  | { error?: string; message?: string; email?: string; universityId?: string; attempt: number }
+  | {
+      error?: string;
+      // Set once a code has been emailed: which address, and which kind of code.
+      sentTo?: string;
+      mode?: "email" | "email_change";
+      email?: string;
+      universityId?: string;
+      attempt: number;
+    }
   | undefined;
 
-// Starts university verification by emailing the user a sign-in link. Opening
-// that link proves they own the address; /auth/confirm then asks the database
-// to verify them (see claim_university_verification in the migrations).
+// Starts university verification by emailing the student a code (the email
+// also has a link, which works too). Entering the code proves they own the
+// address; the database then verifies them (claim_university_verification).
 export async function startVerification(
   _prev: VerificationState,
   formData: FormData,
 ): Promise<VerificationState> {
   const universityId = field(formData, "universityId");
   const email = field(formData, "email").toLowerCase();
-  const reply = (rest: { error?: string; message?: string }): VerificationState => ({
+  const reply = (rest: {
+    error?: string;
+    sentTo?: string;
+    mode?: "email" | "email_change";
+  }): VerificationState => ({
     ...rest,
     email,
     universityId,
@@ -135,22 +147,22 @@ export async function startVerification(
       email,
       options: { shouldCreateUser: false, emailRedirectTo: redirectTo },
     });
-    if (error) return reply({ error: error.message });
-    return reply({
-      message: `We sent a verification link to ${email}. Open it in this browser to finish.`,
-    });
+    if (error) return reply({ error: friendlyEmailError(error.message) });
+    return reply({ sentTo: email, mode: "email" });
   }
 
   // A different address: switch the account to the university email.
   // Supabase emails a confirmation link to the new address (and, if secure
   // email change is on, one to the current address too).
   const { error } = await supabase.auth.updateUser({ email }, { emailRedirectTo: redirectTo });
-  if (error) return reply({ error: error.message });
-  return reply({
-    message:
-      `We sent a confirmation link to ${email}. Open it in this browser to switch your ` +
-      `account to that address and verify it. Supabase may also email ${user.email} to approve the change.`,
-  });
+  if (error) return reply({ error: friendlyEmailError(error.message) });
+  return reply({ sentTo: email, mode: "email_change" });
+}
+
+function friendlyEmailError(message: string): string {
+  return /rate|seconds|security purposes/i.test(message)
+    ? "Please wait a minute before asking for another code."
+    : message;
 }
 
 const AVATAR_TYPES: Record<string, string> = {

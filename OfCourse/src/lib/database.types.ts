@@ -69,6 +69,39 @@ export type Database = {
           },
         ];
       };
+      ai_conversations: {
+        Row: {
+          id: string;
+          user_id: string;
+          course_id: string;
+          title: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: { user_id: string; course_id: string; title: string };
+        Update: { title?: string; updated_at?: string };
+        Relationships: [];
+      };
+      ai_messages: {
+        Row: {
+          id: string;
+          conversation_id: string;
+          role: "user" | "assistant";
+          content: string;
+          sources: Json;
+          status: "answer" | "no_results";
+          created_at: string;
+        };
+        Insert: {
+          conversation_id: string;
+          role: "user" | "assistant";
+          content: string;
+          sources?: Json;
+          status?: "answer" | "no_results";
+        };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
       post_embeddings: {
         Row: {
           post_id: string;
@@ -157,6 +190,7 @@ export type Database = {
           avatar_url: string | null;
           verified: boolean;
           verified_at: string | null;
+          terms_accepted_at: string | null;
           updated_at: string;
         } & Timestamps;
         Insert: {
@@ -409,6 +443,7 @@ export type Database = {
     };
     Functions: {
       claim_university_verification: { Args: never; Returns: string | null };
+      accept_terms: { Args: never; Returns: string | null };
       university_for_email: { Args: { email: string }; Returns: string | null };
       match_course_posts: {
         Args: { query_embedding: string | number[]; p_course_id: string; match_count?: number };

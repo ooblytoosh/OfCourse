@@ -1,12 +1,22 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import { JoinedCourses } from "@/components/layout/joined-courses";
 import { NavLinks } from "@/components/layout/nav-links";
 import { SiteHeader } from "@/components/layout/site-header";
+import { getCurrentUser } from "@/lib/auth";
+import { getProfile } from "@/lib/data/profiles";
 
 // App shell: top bar, left navigation, main content.
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  // New students agree to the terms (on /welcome) before using the app.
+  const user = await getCurrentUser();
+  if (user) {
+    const profile = await getProfile(user.id);
+    if (profile && !profile.termsAcceptedAt) redirect("/welcome");
+  }
+
   return (
     <>
       <SiteHeader />

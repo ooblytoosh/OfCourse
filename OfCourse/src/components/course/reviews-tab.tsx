@@ -22,7 +22,7 @@ export function ReviewsTab({
 }) {
   return (
     <div className="flex flex-col gap-6">
-      <section id="rate" className="scroll-mt-20 rounded-xl border bg-card p-5">
+      <section id="rate" className="surface scroll-mt-20 p-5">
         <h3 className="font-semibold">Rate this course</h3>
         <p className="mt-1 text-sm text-muted-foreground">
           {course.stats
