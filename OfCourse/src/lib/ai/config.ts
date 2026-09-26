@@ -22,8 +22,10 @@ export const AI_LIMITS = {
   sourceChars: 1500,
   // Characters of a post that get embedded.
   documentChars: 6000,
-  // Minimum cosine similarity for a post to count as relevant.
-  minSimilarity: Number(process.env.AI_MIN_SIMILARITY ?? 0.3),
+  // Minimum cosine similarity for a post to count as relevant. Calibrated for
+  // text-embedding-3-small on the demo data: on-topic posts score ~0.5-0.8,
+  // loosely related ones ~0.3-0.45, unrelated ones < 0.2.
+  minSimilarity: Number(process.env.AI_MIN_SIMILARITY ?? 0.5),
   // Questions each student can ask per hour.
   hourlyQuestions: Number(process.env.AI_HOURLY_LIMIT ?? 30),
 };
