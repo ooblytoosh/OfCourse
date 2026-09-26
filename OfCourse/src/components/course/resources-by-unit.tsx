@@ -1,4 +1,4 @@
-import { FileText, Lightbulb, MessageSquare } from "lucide-react";
+import { ArrowBigUp, FileText, MessageSquare } from "lucide-react";
 import Link from "next/link";
 
 import { PostTypeBadge } from "@/components/post/post-type-badge";
@@ -32,10 +32,10 @@ function ResourceRow({ post }: { post: PostSummary }) {
         </p>
       </div>
       <p className="flex shrink-0 items-center gap-3 text-xs text-muted-foreground tabular-nums">
-        <span className="inline-flex items-center gap-1" title="Students who found this helpful">
-          <Lightbulb className="size-3.5" aria-hidden />
+        <span className="inline-flex items-center gap-1" title="Upvotes">
+          <ArrowBigUp className="size-3.5" aria-hidden />
           {post.voteScore}
-          <span className="sr-only">helpful</span>
+          <span className="sr-only">upvotes</span>
         </span>
         <span className="inline-flex items-center gap-1">
           <MessageSquare className="size-3.5" aria-hidden />

@@ -22,14 +22,14 @@ export function VerifiedBadge({
     <span
       title={title}
       className={cn(
-        "inline-flex items-center gap-1 font-medium text-sky-700",
+        "inline-flex items-center gap-1 font-medium text-muted-foreground",
         size === "lg"
-          ? "rounded-full bg-sky-50 px-2.5 py-1 text-sm ring-1 ring-sky-200 ring-inset"
+          ? "rounded-md bg-muted px-2 py-0.5 text-sm text-foreground/85 ring-1 ring-border ring-inset"
           : "text-xs",
         className,
       )}
     >
-      <BadgeCheck className={size === "lg" ? "size-4" : "size-3.5"} aria-hidden />
+      <BadgeCheck className={cn("text-foreground", size === "lg" ? "size-4" : "size-3.5")} aria-hidden />
       <span>
         {university}
         {size === "lg" && " Verified"}

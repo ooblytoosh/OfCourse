@@ -14,7 +14,7 @@ export const WELCOME_POINTS = [
   },
   {
     title: "Share what helped you",
-    body: "Your notes, explanations and advice help the next class. Mark posts helpful and save the ones you want to keep.",
+    body: "Your notes, explanations and advice help the next class. Upvote what helped and save the ones you want to keep.",
   },
 ];
 

@@ -11,7 +11,7 @@ export function ContentGuidelines() {
         <ul className="mt-3 space-y-2 text-sm">
           {POSTABLE_TYPES.map((type) => POST_TYPES[type]).map(({ label, description }) => (
             <li key={label} className="flex gap-2">
-              <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" />
+              <Check className="mt-0.5 size-4 shrink-0 text-good" />
               <span>
                 <span className="font-medium">{label}</span>{" "}
                 <span className="text-muted-foreground">— {description}</span>

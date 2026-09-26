@@ -81,7 +81,7 @@ export function ProfileForm({
       </div>
       <div className="flex items-center justify-end gap-3">
         {state?.saved && (
-          <span className="text-sm text-emerald-700" role="status">
+          <span className="text-sm text-good" role="status">
             Saved
           </span>
         )}

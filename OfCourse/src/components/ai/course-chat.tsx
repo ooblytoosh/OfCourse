@@ -28,7 +28,7 @@ function Thinking() {
   return (
     <div className="flex flex-col gap-3" role="status" aria-live="polite">
       <p className="flex items-center gap-2 text-sm font-medium">
-        <Sparkles className="size-4 animate-pulse text-brand" aria-hidden />
+        <Sparkles className="size-4 animate-pulse" aria-hidden />
         {LOADING_STEPS[step]}
       </p>
       <div className="flex flex-col gap-2">
@@ -132,12 +132,15 @@ export function CourseChat({
   };
 
   return (
-    <section aria-labelledby="ask-heading" className="surface overflow-hidden">
+    <section
+      aria-labelledby="ask-heading"
+      className="overflow-hidden rounded-xl border border-foreground/15 bg-card ring-4 ring-muted/60"
+    >
       <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3 sm:px-5">
         <div className="min-w-0">
           <h2 id="ask-heading" className="flex items-center gap-1.5 font-semibold">
-            <Sparkles className="size-4 text-brand" aria-hidden />
-            Ask about {courseCode}
+            <Sparkles className="size-4" aria-hidden />
+            Ask the student knowledge
           </h2>
           <p className="text-xs text-muted-foreground">Answers come only from what {courseCode} students have shared.</p>
         </div>
@@ -203,22 +206,7 @@ export function CourseChat({
       </div>
 
       {signedIn && (
-        <div className={cn("flex flex-col gap-2 px-4 pb-4 sm:px-5", turns.length > 0 ? "border-t pt-3" : "pt-4")}>
-          {turns.length === 0 && suggestions.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {suggestions.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => ask(s)}
-                  disabled={pending}
-                  className="rounded-full border bg-background px-3 py-1.5 text-sm text-muted-foreground transition-all hover:-translate-y-px hover:border-foreground/30 hover:text-foreground active:translate-y-0"
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          )}
+        <div className={cn("flex flex-col gap-3 px-4 pb-4 sm:px-5", turns.length > 0 ? "border-t pt-3" : "pt-4")}>
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -229,26 +217,47 @@ export function CourseChat({
             <label htmlFor="ask-question" className="sr-only">
               Your question
             </label>
-            <input
-              id="ask-question"
-              ref={inputRef}
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              maxLength={QUESTION_MAX}
-              placeholder={turns.length ? "Ask a follow-up…" : "What are you trying to figure out?"}
-              disabled={pending}
-              className="h-11 min-w-0 flex-1 rounded-xl border border-input bg-background px-4 text-sm outline-none transition-shadow focus-visible:border-ring focus-visible:ring-4 focus-visible:ring-ring/20"
-            />
+            <div className="relative min-w-0 flex-1">
+              <Sparkles
+                className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground"
+                aria-hidden
+              />
+              <input
+                id="ask-question"
+                ref={inputRef}
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                maxLength={QUESTION_MAX}
+                placeholder={turns.length ? "Ask a follow-up…" : `Ask anything about ${courseCode}…`}
+                disabled={pending}
+                className="h-12 w-full rounded-lg border border-input bg-background pr-4 pl-10 text-[0.95rem] outline-none transition-shadow placeholder:text-muted-foreground focus-visible:border-foreground/40 focus-visible:ring-4 focus-visible:ring-ring/20"
+              />
+            </div>
             <Button
               type="submit"
               size="icon-lg"
-              className="size-11 shrink-0 rounded-xl"
+              className="size-12 shrink-0 rounded-lg"
               disabled={pending || question.trim().length < QUESTION_MIN}
               aria-label="Search student knowledge"
             >
               <ArrowUp />
             </Button>
           </form>
+          {turns.length === 0 && suggestions.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {suggestions.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => ask(s)}
+                  disabled={pending}
+                  className="rounded-md border bg-background px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </section>

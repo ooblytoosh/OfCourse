@@ -1,6 +1,6 @@
 "use client";
 
-import { Info, Lightbulb, Sparkles } from "lucide-react";
+import { ArrowBigUp, Info, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { Fragment, useState } from "react";
 
@@ -97,8 +97,9 @@ export function SourceCard({ source, index }: { source: AskSource; index?: numbe
         <span>{source.course.code}</span>
         {source.semester && <span>· {source.semester}</span>}
         <span className="inline-flex items-center">
-          · <Lightbulb className="ml-0.5 size-3.5" aria-hidden />
-          {source.voteScore} helpful
+          · <ArrowBigUp className="ml-0.5 size-3.5" aria-hidden />
+          {source.voteScore}
+          <span className="sr-only">upvotes</span>
         </span>
       </div>
     </li>

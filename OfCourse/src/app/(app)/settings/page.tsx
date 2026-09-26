@@ -48,7 +48,7 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
       <PageHeader title="Settings" description="Your public profile and university verification." />
 
       {welcome && (
-        <p className="rounded-xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-900">
+        <p className="rounded-xl border bg-muted/50 p-4 text-sm">
           Welcome to OfCourse! One last step: verify your university email below.
         </p>
       )}

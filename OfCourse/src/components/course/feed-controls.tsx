@@ -1,4 +1,4 @@
-import { Clock, Flame, Lightbulb, Search } from "lucide-react";
+import { ArrowBigUp, Clock, Flame, Search } from "lucide-react";
 import Link from "next/link";
 
 import { TopicSelect } from "@/components/course/topic-select";
@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 const SORTS: { value: FeedSort; label: string; icon: typeof Flame }[] = [
   { value: "hot", label: "Hot", icon: Flame },
   { value: "new", label: "New", icon: Clock },
-  { value: "top", label: "Most helpful", icon: Lightbulb },
+  { value: "top", label: "Top", icon: ArrowBigUp },
 ];
 
 export type FeedParams = { tab: CourseTab; sort?: FeedSort; topic?: string | null; q?: string | null };

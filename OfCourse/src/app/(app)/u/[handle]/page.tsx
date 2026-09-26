@@ -1,4 +1,4 @@
-import { BadgeAlert, Bookmark, Lightbulb, MessageSquare, PenLine } from "lucide-react";
+import { ArrowBigUp, BadgeAlert, Bookmark, MessageSquare, PenLine } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -95,7 +95,7 @@ export default async function ProfilePage({ params }: PageProps<"/u/[handle]">) 
       </header>
 
       {isSelf && !profile.verified && (
-        <div className="flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-xl border bg-muted/50 p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
           <p className="flex items-start gap-2">
             <BadgeAlert className="mt-0.5 size-4 shrink-0" />
             Verify your university email so classmates know you&apos;re a real student.
@@ -108,7 +108,7 @@ export default async function ProfilePage({ params }: PageProps<"/u/[handle]">) 
 
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat value={activity.posts.length + activity.commentCount} label="Contributions" />
-        <Stat value={activity.helpfulVotes} label="Helpful votes" />
+        <Stat value={activity.helpfulVotes} label="Upvotes received" />
         <Stat value={activity.commentCount} label="Comments" />
         {activity.savedCount !== null ? (
           <Stat value={activity.savedCount} label="Saved resources" href="/saved" />
@@ -133,8 +133,8 @@ export default async function ProfilePage({ params }: PageProps<"/u/[handle]">) 
                       <span className="line-clamp-3 font-medium leading-snug">{post.title}</span>
                       <span className="mt-auto flex items-center gap-3 text-sm whitespace-nowrap text-muted-foreground">
                         <span className="inline-flex items-center gap-1">
-                          <Lightbulb className="size-4" aria-hidden />
-                          {post.voteScore} helpful
+                          <ArrowBigUp className="size-4" aria-hidden />
+                          {post.voteScore} upvotes
                         </span>
                         <span>{post.course.code}</span>
                       </span>
