@@ -475,7 +475,44 @@ To find them, solve det(A - λI) = 0 for λ, then find the null space of A - λI
 
 (31, 'math1554', 23, 'discussion', 'Best way to build intuition for linear transformations?',
 'I can compute things, but I don''t "see" what a transformation does. Did anyone find a way to visualize them that helped? Right now I''m just memorizing which matrix rotates and which one shears.',
-'Summer 2026', 3, 20);
+'Summer 2026', 3, 20),
+
+-- More CS 1332 AVL content (different explanation styles for the AI demo)
+(32, 'cs1332', 17, 'explanation', 'Picturing AVL rotations as a see-saw',
+'I''m a visual learner, so here''s how I picture AVL trees: every node is a see-saw, and its balance factor is how far it tips (left height minus right height).
+
+A node is fine while it tips by at most one. The moment an insert or delete makes it tip by two, you rotate.
+
+For a single rotation, grab the heavier child and lift it up to where its parent was. The parent slides down to the lighter side, and the child''s inner subtree gets handed across to the parent. Picture it as sliding the fulcrum over one spot.
+
+Double rotations happen when the heavy side is heavy on the inside, like a zig-zag. Straighten the zig-zag with a rotation at the child first, and then it''s a normal single rotation at the top.
+
+What made it click: after any rotation, the new top node always ends up perfectly level, and nothing above it needs rebalancing on insert.',
+'Spring 2026', 9, 58),
+
+(33, 'cs1332', 20, 'note', 'AVL rotation pseudocode that finally worked for me',
+'My own pseudocode notes for rotations. Writing them this way stopped my pointer bugs.
+
+rotateLeft(node):
+  newRoot = node.right
+  node.right = newRoot.left
+  newRoot.left = node
+  update height and balance factor of node, then newRoot
+  return newRoot
+
+rotateRight is the mirror image.
+
+rebalance(node):
+  if balance(node) == -2:            (right heavy)
+    if balance(node.right) > 0: node.right = rotateRight(node.right)
+    return rotateLeft(node)
+  if balance(node) == 2:             (left heavy)
+    if balance(node.left) < 0: node.left = rotateLeft(node.left)
+    return rotateRight(node)
+  return node
+
+Two things I kept forgetting: update the lower node''s height before the new root''s, and always return the new subtree root so the parent pointer gets reassigned on the way back up the recursion.',
+'Fall 2025', 60, 50);
 
 insert into public.posts
   (id, course_id, author_id, title, content, type, semester, integrity_attested_at, created_at, updated_at)
@@ -516,7 +553,9 @@ from (values
   (28, 'Eigenvalues'),
   (29, 'Row Reduction'),
   (30, 'Determinants'),
-  (31, 'Transformations')
+  (31, 'Transformations'),
+  (32, 'AVL Trees'), (32, 'Trees'),
+  (33, 'AVL Trees'), (33, 'Recursion')
 ) as pt (post, topic)
 join demo_posts p on p.n = pt.post
 join public.courses c on c.slug = p.course
@@ -589,7 +628,10 @@ insert into demo_comments values
 (55, 24, 4, null, 'Row of boxes is exactly how I think about it too.', 6),
 (56, 26, 28, null, 'A little prep helps, but it''s not required. Knowing basic pointers makes the first weeks smoother.', 4),
 (57, 28, 6, null, 'The picture of stretching without turning is what made it click for me too.', 10),
-(58, 31, 27, null, 'Watch where the two basis vectors go. The columns of the matrix are literally where they land.', 4);
+(58, 31, 27, null, 'Watch where the two basis vectors go. The columns of the matrix are literally where they land.', 4),
+(59, 32, 13, null, 'The see-saw picture is so much easier to remember than the balance factor table.', 5),
+(60, 32, 2, 59, 'Agreed. I pair it with drawing the four cases side by side.', 8),
+(61, 33, 10, null, 'Returning the new subtree root was exactly my bug. Thank you!', 12);
 
 insert into public.comments (id, post_id, author_id, parent_comment_id, content, created_at, updated_at)
 select pg_temp.demo_id('c', dc.n), pg_temp.demo_id('e', dc.post), pg_temp.demo_id('d', dc.author),

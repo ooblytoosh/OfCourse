@@ -3,6 +3,7 @@
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { queuePostEmbedding } from "@/lib/ai/index-posts";
 import { getCurrentUser } from "@/lib/auth";
 import { ACADEMIC_INTEGRITY_ATTESTATION, isPostableType, POST_LIMITS } from "@/lib/content-policy";
 import { isValidSemester } from "@/lib/semesters";
@@ -258,6 +259,7 @@ export async function createPost(
     }
   }
 
+  queuePostEmbedding(post.id);
   redirect(`/c/${course.slug}/posts/${post.id}`);
 }
 
@@ -306,6 +308,7 @@ export async function updatePost(
           .from("post_topics")
           .insert(values.topicIds.map((topicId) => ({ post_id: postId, topic_id: topicId })))
       : { error: clearError };
+  queuePostEmbedding(postId);
   if (topicError) return fail({ form: "Your post was saved, but its topics couldn't be updated." });
 
   redirect(`/c/${course.slug}/posts/${postId}`);

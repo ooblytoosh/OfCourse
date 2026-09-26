@@ -55,6 +55,45 @@ export type Database = {
           },
         ];
       };
+      post_embeddings: {
+        Row: {
+          post_id: string;
+          course_id: string;
+          // pgvector values come back from the API as a string like "[0.1,...]".
+          embedding: string;
+          model: string;
+          content_hash: string;
+          updated_at: string;
+        };
+        Insert: {
+          post_id: string;
+          course_id: string;
+          embedding: string | number[];
+          model: string;
+          content_hash: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["post_embeddings"]["Insert"]>;
+        Relationships: [];
+      };
+      ai_search_log: {
+        Row: {
+          id: number;
+          user_id: string;
+          course_id: string | null;
+          question: string;
+          source_count: number;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          course_id?: string | null;
+          question: string;
+          source_count?: number;
+        };
+        Update: Partial<Database["public"]["Tables"]["ai_search_log"]["Insert"]>;
+        Relationships: [];
+      };
       course_ratings: {
         Row: {
           user_id: string;
@@ -351,6 +390,10 @@ export type Database = {
     Functions: {
       claim_university_verification: { Args: never; Returns: string | null };
       university_for_email: { Args: { email: string }; Returns: string | null };
+      match_course_posts: {
+        Args: { query_embedding: string | number[]; p_course_id: string; match_count?: number };
+        Returns: { post_id: string; similarity: number }[];
+      };
     };
     Enums: {
       post_type:
