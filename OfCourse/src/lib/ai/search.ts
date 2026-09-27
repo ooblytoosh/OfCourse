@@ -64,6 +64,10 @@ export async function askStudentKnowledge(input: {
       .eq("id", input.courseId)
       .maybeSingle();
     if (!course) throw new FriendlyError("That course doesn't exist.");
+    const { data: allowed } = await supabase.rpc("can_participate", { p_course_id: course.id });
+    if (allowed !== true) {
+      throw new FriendlyError("Verify your university email to ask the AI about this course.");
+    }
 
     // A continued chat must be the student's own, in this course.
     let history: ChatTurn[] = [];

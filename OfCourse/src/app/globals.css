@@ -57,98 +57,112 @@
 
 :root {
   color-scheme: light;
-  /* Brand: violet → fuchsia → orange. Used for accents, not everywhere. */
-  --brand: oklch(0.55 0.23 288);
-  --brand-foreground: oklch(0.99 0 0);
-  --brand-2: oklch(0.6 0.24 335);
-  --brand-3: oklch(0.72 0.18 52);
+  /* Brand: polished gold. --brand is the main tone; the gold-* stops make the
+     metallic gradient (deep → bright → shine → bright → deep). */
+  --brand: oklch(0.68 0.14 78);
+  --brand-foreground: oklch(0.22 0.04 70);
+  --brand-2: oklch(0.8 0.15 88);
+  --brand-3: oklch(0.55 0.12 65);
+  --gold-deep: oklch(0.6 0.13 68);
+  --gold: oklch(0.76 0.15 83);
+  --gold-shine: oklch(0.93 0.09 95);
+  /* Gold text needs deeper stops on a light page to stay readable. */
+  --gold-text-deep: oklch(0.48 0.11 62);
+  --gold-text: oklch(0.6 0.14 74);
+  --gold-text-shine: oklch(0.72 0.16 86);
   /* Stat colors: good / middling / heavy */
   --good: oklch(0.58 0.15 152);
-  --warn: oklch(0.7 0.16 75);
+  --warn: oklch(0.68 0.15 70);
   --bad: oklch(0.6 0.2 32);
-  --background: oklch(0.984 0.004 290);
-  --foreground: oklch(0.2 0.02 285);
+  --background: oklch(0.985 0.005 90);
+  --foreground: oklch(0.2 0.015 70);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.02 285);
+  --card-foreground: oklch(0.2 0.015 70);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.02 285);
-  --primary: oklch(0.55 0.23 288);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.96 0.01 290);
-  --secondary-foreground: oklch(0.25 0.03 285);
-  --muted: oklch(0.962 0.008 290);
-  --muted-foreground: oklch(0.5 0.025 285);
-  --accent: oklch(0.95 0.02 290);
-  --accent-foreground: oklch(0.3 0.08 288);
+  --popover-foreground: oklch(0.2 0.015 70);
+  --primary: oklch(0.76 0.15 82);
+  --primary-foreground: oklch(0.22 0.04 70);
+  --secondary: oklch(0.96 0.01 90);
+  --secondary-foreground: oklch(0.25 0.02 70);
+  --muted: oklch(0.962 0.008 90);
+  --muted-foreground: oklch(0.5 0.02 75);
+  --accent: oklch(0.95 0.04 90);
+  --accent-foreground: oklch(0.35 0.08 70);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.91 0.012 290);
-  --input: oklch(0.89 0.014 290);
-  --ring: oklch(0.55 0.23 288 / 60%);
-  --surface-shadow: 0 1px 2px 0 oklch(0.3 0.05 285 / 0.05);
-  --surface-hover-shadow: 0 10px 30px -14px oklch(0.45 0.2 288 / 0.35);
-  --glow-1: oklch(0.55 0.23 288 / 10%);
-  --glow-2: oklch(0.6 0.24 335 / 7%);
+  --border: oklch(0.905 0.015 90);
+  --input: oklch(0.885 0.02 90);
+  --ring: oklch(0.7 0.14 80 / 60%);
+  --surface-shadow: 0 1px 2px 0 oklch(0.3 0.03 70 / 0.05);
+  --surface-hover-shadow: 0 10px 30px -14px oklch(0.6 0.14 78 / 0.4);
+  --glow-1: oklch(0.8 0.15 88 / 16%);
+  --glow-2: oklch(0.75 0.14 70 / 10%);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.7rem;
-  --sidebar: oklch(0.984 0.004 290);
-  --sidebar-foreground: oklch(0.2 0.02 285);
-  --sidebar-primary: oklch(0.55 0.23 288);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.95 0.02 290);
-  --sidebar-accent-foreground: oklch(0.3 0.08 288);
-  --sidebar-border: oklch(0.91 0.012 290);
-  --sidebar-ring: oklch(0.55 0.23 288 / 60%);
+  --sidebar: oklch(0.985 0.005 90);
+  --sidebar-foreground: oklch(0.2 0.015 70);
+  --sidebar-primary: oklch(0.76 0.15 82);
+  --sidebar-primary-foreground: oklch(0.22 0.04 70);
+  --sidebar-accent: oklch(0.95 0.04 90);
+  --sidebar-accent-foreground: oklch(0.35 0.08 70);
+  --sidebar-border: oklch(0.905 0.015 90);
+  --sidebar-ring: oklch(0.7 0.14 80 / 60%);
 }
 
-/* Default theme: deep blue-violet night with vivid accents. */
+/* Default theme: warm near-black with gold that catches the light. */
 .dark {
   color-scheme: dark;
-  --brand: oklch(0.7 0.19 290);
-  --brand-foreground: oklch(0.99 0 0);
-  --brand-2: oklch(0.72 0.21 340);
-  --brand-3: oklch(0.8 0.15 60);
+  --brand: oklch(0.83 0.14 85);
+  --brand-foreground: oklch(0.2 0.03 70);
+  --brand-2: oklch(0.92 0.1 95);
+  --brand-3: oklch(0.7 0.13 72);
+  --gold-deep: oklch(0.66 0.13 70);
+  --gold: oklch(0.82 0.15 85);
+  --gold-shine: oklch(0.96 0.07 97);
+  --gold-text-deep: oklch(0.7 0.13 72);
+  --gold-text: oklch(0.83 0.15 85);
+  --gold-text-shine: oklch(0.95 0.08 96);
   --good: oklch(0.77 0.16 152);
   --warn: oklch(0.84 0.15 85);
   --bad: oklch(0.72 0.18 35);
-  --background: oklch(0.155 0.018 285);
-  --foreground: oklch(0.96 0.005 285);
-  --card: oklch(0.195 0.022 285);
-  --card-foreground: oklch(0.96 0.005 285);
-  --popover: oklch(0.22 0.025 285);
-  --popover-foreground: oklch(0.96 0.005 285);
-  --primary: oklch(0.62 0.21 290);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.25 0.025 285);
-  --secondary-foreground: oklch(0.96 0.005 285);
-  --muted: oklch(0.245 0.024 285);
-  --muted-foreground: oklch(0.7 0.02 285);
-  --accent: oklch(0.28 0.05 288);
-  --accent-foreground: oklch(0.96 0.005 285);
+  --background: oklch(0.15 0.006 80);
+  --foreground: oklch(0.96 0.006 90);
+  --card: oklch(0.19 0.008 80);
+  --card-foreground: oklch(0.96 0.006 90);
+  --popover: oklch(0.215 0.01 80);
+  --popover-foreground: oklch(0.96 0.006 90);
+  --primary: oklch(0.82 0.15 85);
+  --primary-foreground: oklch(0.2 0.03 70);
+  --secondary: oklch(0.245 0.01 80);
+  --secondary-foreground: oklch(0.96 0.006 90);
+  --muted: oklch(0.24 0.01 80);
+  --muted-foreground: oklch(0.7 0.015 85);
+  --accent: oklch(0.27 0.035 85);
+  --accent-foreground: oklch(0.96 0.006 90);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(0.85 0.05 290 / 11%);
-  --input: oklch(0.85 0.05 290 / 16%);
-  --ring: oklch(0.7 0.19 290 / 60%);
+  --border: oklch(0.9 0.05 88 / 10%);
+  --input: oklch(0.9 0.05 88 / 15%);
+  --ring: oklch(0.83 0.14 85 / 55%);
   --surface-shadow: none;
-  --surface-hover-shadow: 0 10px 30px -14px oklch(0.6 0.22 290 / 0.45);
-  --glow-1: oklch(0.6 0.22 290 / 16%);
-  --glow-2: oklch(0.65 0.22 340 / 10%);
+  --surface-hover-shadow: 0 10px 30px -14px oklch(0.8 0.15 85 / 0.35);
+  --glow-1: oklch(0.8 0.15 85 / 11%);
+  --glow-2: oklch(0.75 0.14 65 / 7%);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.17 0.02 285);
-  --sidebar-foreground: oklch(0.96 0.005 285);
-  --sidebar-primary: oklch(0.62 0.21 290);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.28 0.05 288);
-  --sidebar-accent-foreground: oklch(0.96 0.005 285);
-  --sidebar-border: oklch(0.85 0.05 290 / 11%);
-  --sidebar-ring: oklch(0.7 0.19 290 / 60%);
+  --sidebar: oklch(0.17 0.007 80);
+  --sidebar-foreground: oklch(0.96 0.006 90);
+  --sidebar-primary: oklch(0.82 0.15 85);
+  --sidebar-primary-foreground: oklch(0.2 0.03 70);
+  --sidebar-accent: oklch(0.27 0.035 85);
+  --sidebar-accent-foreground: oklch(0.96 0.006 90);
+  --sidebar-border: oklch(0.9 0.05 88 / 10%);
+  --sidebar-ring: oklch(0.83 0.14 85 / 55%);
 }
 
 @layer base {
@@ -215,14 +229,61 @@
   transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease !important;
 }
 
-/* Brand gradient helpers */
+/* Metallic gold helpers */
 @utility bg-brand-gradient {
-  background-image: linear-gradient(120deg, var(--brand), var(--brand-2) 60%, var(--brand-3));
+  background-image: linear-gradient(
+    125deg,
+    var(--gold-deep) 0%,
+    var(--gold) 28%,
+    var(--gold-shine) 48%,
+    var(--gold) 64%,
+    var(--gold-deep) 100%
+  );
+  background-size: 200% 200%;
+  background-position: 0% 50%;
 }
 
 @utility text-gradient {
-  background-image: linear-gradient(100deg, var(--brand), var(--brand-2) 55%, var(--brand-3));
+  background-image: linear-gradient(
+    100deg,
+    var(--gold-text-deep) 0%,
+    var(--gold-text) 30%,
+    var(--gold-text-shine) 50%,
+    var(--gold-text) 70%,
+    var(--gold-text-deep) 100%
+  );
+  background-size: 200% auto;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+/* A light sweep across gold surfaces on hover. */
+@utility shine {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(110deg, transparent 35%, oklch(1 0 0 / 55%) 50%, transparent 65%);
+    transform: translateX(-120%);
+    transition: transform 700ms cubic-bezier(0.2, 0, 0, 1);
+  }
+  &:hover::after {
+    transform: translateX(120%);
+  }
+}
+
+@keyframes gold-drift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Slowly moving shine for large gold text. */
+@utility animate-gold {
+  animation: gold-drift 6s ease-in-out infinite;
 }

@@ -1,12 +1,13 @@
 "use client";
 
-import { ArrowUp, History, Info, Plus, Sparkles, Trash2 } from "lucide-react";
+import { ArrowUp, History, Info, Plus, ShieldCheck, Sparkles, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 
 import { AiAnswer } from "@/components/ai/ai-answer";
 import { SignInLink } from "@/components/sign-in-link";
 import { toast } from "@/components/toaster";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   askCourseQuestion,
@@ -17,6 +18,7 @@ import {
 import { AI_DISCLAIMER } from "@/lib/ai/disclaimer";
 import type { AskResult } from "@/lib/ai/search";
 import type { ChatSummary } from "@/lib/data/ai-chats";
+import { VERIFY_HREF } from "@/lib/participation";
 import { cn } from "@/lib/utils";
 
 const QUESTION_MIN = 5;
@@ -70,6 +72,8 @@ export function CourseChat({
   initialChats,
   initialChatId,
   initialTurns,
+  canAsk = true,
+  blockedMessage,
 }: {
   courseId: string;
   courseCode: string;
@@ -78,6 +82,9 @@ export function CourseChat({
   initialChats: ChatSummary[];
   initialChatId: string | null;
   initialTurns: AskResult[];
+  // False for signed-in students who aren't verified at this university.
+  canAsk?: boolean;
+  blockedMessage?: string;
 }) {
   const [chats, setChats] = useState(initialChats);
   const [chatId, setChatId] = useState<string | null>(initialChatId);
@@ -176,7 +183,7 @@ export function CourseChat({
               id="ask-heading"
               className="flex items-center gap-1.5 font-semibold"
             >
-              <span className="grid size-6 place-items-center rounded-md bg-brand-gradient text-white">
+              <span className="grid size-6 place-items-center rounded-md bg-brand-gradient text-brand-foreground">
                 <Sparkles className="size-3.5" aria-hidden />
               </span>
               Ask the student knowledge
@@ -287,7 +294,17 @@ export function CourseChat({
           )}
         </div>
 
-        {signedIn && (
+        {signedIn && !canAsk && (
+          <div className="flex flex-col gap-3 px-4 py-4 text-sm sm:flex-row sm:items-center sm:justify-between sm:px-5">
+            <p className="text-muted-foreground">{blockedMessage}</p>
+            <Link href={VERIFY_HREF} className={cn(buttonVariants({ size: "sm" }), "shrink-0")}>
+              <ShieldCheck />
+              Verify now
+            </Link>
+          </div>
+        )}
+
+        {signedIn && canAsk && (
           <div
             className={cn(
               "flex flex-col gap-3 px-4 pb-4 sm:px-5",

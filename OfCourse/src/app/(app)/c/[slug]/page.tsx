@@ -12,6 +12,7 @@ import { ReviewsTab } from "@/components/course/reviews-tab";
 import { SyllabusSidebar } from "@/components/course/syllabus-sidebar";
 import { EmptyState } from "@/components/empty-state";
 import { PostCard } from "@/components/post/post-card";
+import { VerifyPrompt } from "@/components/verify-prompt";
 import { getCurrentUser } from "@/lib/auth";
 import {
   COURSE_TAB_ORDER,
@@ -19,6 +20,8 @@ import {
   type CourseTab,
 } from "@/lib/content-policy";
 import { getChatTurns, listChats } from "@/lib/data/ai-chats";
+import { getProfile } from "@/lib/data/profiles";
+import { participationFor } from "@/lib/participation";
 import { getCourse, getCourseTopics, getCourseUnits } from "@/lib/data/courses";
 import {
   FEED_SORTS,
@@ -52,8 +55,12 @@ export default async function CoursePage({
   const user = await getCurrentUser();
   const signedIn = Boolean(user);
 
-  const course = await getCourse(slug, user?.id);
+  const [course, profile] = await Promise.all([
+    getCourse(slug, user?.id),
+    user ? getProfile(user.id) : Promise.resolve(null),
+  ]);
   if (!course) notFound();
+  const participation = participationFor(profile, course);
 
   const tabParam = param(search.tab);
   const tab: CourseTab = COURSE_TAB_ORDER.includes(tabParam as CourseTab)
@@ -121,7 +128,8 @@ export default async function CoursePage({
 
   return (
     <div className="flex flex-col gap-8">
-      <CourseHeader course={course} signedIn={signedIn} />
+      <CourseHeader course={course} signedIn={signedIn} participation={participation} />
+      {signedIn && !participation.allowed && <VerifyPrompt participation={participation} />}
 
       <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_16rem]">
         <div className="flex min-w-0 flex-col gap-6">
@@ -134,6 +142,8 @@ export default async function CoursePage({
             initialChats={chats}
             initialChatId={chats[0]?.id ?? null}
             initialTurns={chatTurns}
+            canAsk={participation.allowed}
+            blockedMessage={participation.allowed ? undefined : participation.message}
           />
 
           <div className="flex min-w-0 flex-col gap-4">
@@ -145,6 +155,7 @@ export default async function CoursePage({
                 reviews={posts}
                 signedIn={signedIn}
                 semesters={semesterOptions()}
+                canRate={participation.allowed}
               />
             ) : (
               <>
@@ -180,7 +191,7 @@ export default async function CoursePage({
                 ) : (
                   <div className="flex flex-col gap-3">
                     {posts.map((post) => (
-                      <PostCard key={post.id} post={post} signedIn={signedIn} />
+                      <PostCard key={post.id} post={post} signedIn={signedIn} canVote={participation.allowed} />
                     ))}
                   </div>
                 )}

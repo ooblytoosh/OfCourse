@@ -21,11 +21,12 @@ drop function if exists public.handle_email_confirmed();
 -- 2. Majors
 -- ---------------------------------------------------------------------------
 
-create table public.majors (
+create table if not exists public.majors (
   name text primary key check (length(name) between 1 and 80)
 );
 
 alter table public.majors enable row level security;
+drop policy if exists "Majors are public" on public.majors;
 create policy "Majors are public" on public.majors for select using (true);
 revoke all on public.majors from anon, authenticated;
 grant select on public.majors to anon, authenticated;
@@ -76,6 +77,7 @@ update public.profiles
 set major = null
 where major is not null and major not in (select name from public.majors);
 
+alter table public.profiles drop constraint if exists profiles_major_fkey;
 alter table public.profiles
   add constraint profiles_major_fkey foreign key (major) references public.majors (name) on update cascade;
 

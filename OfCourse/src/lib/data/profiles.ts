@@ -12,7 +12,7 @@ export type Profile = {
   gradYear: number | null;
   bio: string | null;
   verified: boolean;
-  university: { name: string; shortName: string; domain: string } | null;
+  university: { id: string; name: string; shortName: string; domain: string } | null;
   termsAcceptedAt: string | null;
   createdAt: string;
 };
@@ -28,12 +28,12 @@ type ProfileRow = {
   verified: boolean;
   terms_accepted_at: string | null;
   created_at: string;
-  university: { name: string; short_name: string | null; domain: string } | null;
+  university: { id: string; name: string; short_name: string | null; domain: string } | null;
 };
 
 const PROFILE_SELECT =
   "id, name, username, avatar_url, major, grad_year, bio, verified, terms_accepted_at, created_at, " +
-  "university:universities(name, short_name, domain)";
+  "university:universities(id, name, short_name, domain)";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -51,6 +51,7 @@ function toProfile(row: ProfileRow): Profile {
     university:
       row.verified && row.university
         ? {
+            id: row.university.id,
             name: row.university.name,
             shortName: row.university.short_name ?? row.university.name,
             domain: row.university.domain,

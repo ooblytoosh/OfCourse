@@ -165,11 +165,13 @@ function TopLevelComment({
   comment,
   postId,
   signedIn,
+  canReply,
   viewerId,
 }: {
   comment: CommentNode;
   postId: string;
   signedIn: boolean;
+  canReply: boolean;
   viewerId?: string;
 }) {
   const [replying, setReplying] = useState(false);
@@ -178,7 +180,7 @@ function TopLevelComment({
   return (
     <li className="flex flex-col gap-2">
       <CommentBody comment={comment} viewerId={viewerId}>
-        {!comment.deleted && !replying && (
+        {canReply && !comment.deleted && !replying && (
           <button type="button" onClick={() => setReplying(true)} className={actionClass}>
             <MessageSquareReply className="size-3.5" />
             Reply
@@ -216,11 +218,14 @@ export function CommentThread({
   comments,
   postId,
   signedIn,
+  canReply = true,
   viewerId,
 }: {
   comments: CommentNode[];
   postId: string;
   signedIn: boolean;
+  // Replying needs a verified student at the course's university.
+  canReply?: boolean;
   viewerId?: string;
 }) {
   if (comments.length === 0) {
@@ -238,6 +243,7 @@ export function CommentThread({
           comment={comment}
           postId={postId}
           signedIn={signedIn}
+          canReply={canReply}
           viewerId={viewerId}
         />
       ))}

@@ -5,11 +5,20 @@ import { ButtonLink } from "@/components/button-link";
 import { CourseStats } from "@/components/course/course-stats";
 import { JoinButton } from "@/components/course/join-button";
 import type { CourseDetail } from "@/lib/data/courses";
+import type { Participation } from "@/lib/participation";
 import { formatCount } from "@/lib/format";
 
 // Course hero: the student stats first and biggest, with the course's name,
 // university and community size around them.
-export function CourseHeader({ course, signedIn }: { course: CourseDetail; signedIn: boolean }) {
+export function CourseHeader({
+  course,
+  signedIn,
+  participation,
+}: {
+  course: CourseDetail;
+  signedIn: boolean;
+  participation: Participation;
+}) {
   return (
     <header className="relative overflow-hidden rounded-2xl border bg-card">
       <div
@@ -32,7 +41,7 @@ export function CourseHeader({ course, signedIn }: { course: CourseDetail; signe
               <span className="font-medium text-foreground">{course.code}</span>
             </nav>
             <h1 className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-3xl leading-tight font-semibold tracking-tight text-balance sm:text-4xl">
-              <span className="rounded-lg bg-brand-gradient px-2.5 py-1 font-mono text-base font-semibold text-white shadow-[0_6px_18px_-8px_var(--brand)] sm:text-lg">
+              <span className="rounded-lg shine bg-brand-gradient px-2.5 py-1 font-mono text-base font-semibold text-brand-foreground shadow-[0_6px_18px_-8px_var(--brand)] sm:text-lg">
                 {course.code}
               </span>
               {course.name}
@@ -58,7 +67,12 @@ export function CourseHeader({ course, signedIn }: { course: CourseDetail; signe
               <PenLine />
               Write a post
             </ButtonLink>
-            <JoinButton courseId={course.id} joined={course.viewerIsMember} signedIn={signedIn} />
+            <JoinButton
+              courseId={course.id}
+              joined={course.viewerIsMember}
+              signedIn={signedIn}
+              participation={participation}
+            />
           </div>
         </div>
       </div>

@@ -6,6 +6,7 @@ import { SectionTitle } from "@/components/section-title";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth";
 import { getJoinedCourses, searchCourses } from "@/lib/data/courses";
+import { getProfile } from "@/lib/data/profiles";
 
 const steps = [
   { icon: PenLine, title: "Students share", body: "Notes, explanations, reviews and advice from people who took the course." },
@@ -15,8 +16,11 @@ const steps = [
 
 export default async function HomePage() {
   const user = await getCurrentUser();
+  const profile = user ? await getProfile(user.id) : null;
+  // Verified students see their own university's courses.
+  const school = profile?.verified ? profile.university : null;
   const [allCourses, joined] = await Promise.all([
-    searchCourses(),
+    searchCourses("", school?.id),
     user ? getJoinedCourses(user.id) : Promise.resolve([]),
   ]);
   const joinedSlugs = new Set(joined.map((c) => c.slug));
@@ -33,7 +37,7 @@ export default async function HomePage() {
           Built by students, for students
         </p>
         <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-balance sm:text-6xl">
-          Learn from the <span className="text-gradient">students who took it.</span>
+          Learn from the <span className="text-gradient animate-gold">students who took it.</span>
         </h1>
         <p className="max-w-xl text-lg text-muted-foreground">
           Real notes, reviews and advice from students who already took your courses, plus AI
@@ -72,7 +76,7 @@ export default async function HomePage() {
               </Link>
             }
           >
-            Popular courses
+            {school ? `Popular at ${school.shortName}` : "Popular courses"}
           </SectionTitle>
           <CourseGrid courses={popular} />
         </section>
@@ -83,7 +87,7 @@ export default async function HomePage() {
         <ol className="grid gap-6 sm:grid-cols-3">
           {steps.map(({ icon: Icon, title, body }) => (
             <li key={title} className="flex gap-3">
-              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-gradient text-white shadow-[0_8px_20px_-10px_var(--brand)]">
+              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-gradient text-brand-foreground shadow-[0_8px_20px_-10px_var(--brand)]">
                 <Icon className="size-4" aria-hidden />
               </span>
               <div>
