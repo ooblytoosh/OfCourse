@@ -276,6 +276,9 @@ export type Database = {
           content: string;
           type: Database["public"]["Enums"]["post_type"];
           semester: string | null;
+          review_workload_hours: number | null;
+          review_difficulty: number | null;
+          review_would_take_again: boolean | null;
           integrity_attested_at: string;
           vote_score: number;
           comment_count: number;
@@ -290,6 +293,9 @@ export type Database = {
           content?: string;
           type?: Database["public"]["Enums"]["post_type"];
           semester?: string | null;
+          review_workload_hours?: number | null;
+          review_difficulty?: number | null;
+          review_would_take_again?: boolean | null;
           integrity_attested_at: string;
           created_at?: string;
           updated_at?: string;

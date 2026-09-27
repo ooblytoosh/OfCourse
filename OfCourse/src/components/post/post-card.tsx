@@ -4,6 +4,7 @@ import Link from "next/link";
 import { BulbVote } from "@/components/bulb/bulb-vote";
 import { PostMeta } from "@/components/post/post-meta";
 import { PostTypeBadge } from "@/components/post/post-type-badge";
+import { ReviewRating } from "@/components/post/review-rating";
 import { SaveButton } from "@/components/post/save-button";
 import { TopicChip } from "@/components/post/topic-chip";
 import type { PostSummary } from "@/lib/data/posts";
@@ -63,6 +64,8 @@ export function PostCard({
             editedAt={post.editedAt}
           />
         </div>
+
+        {post.review && <ReviewRating rating={post.review} className="mt-2" />}
 
         <p className="mt-2.5 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
           {preview(post.content, 260)}

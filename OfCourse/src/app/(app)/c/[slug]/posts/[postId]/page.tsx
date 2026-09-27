@@ -9,6 +9,7 @@ import { CommentThread } from "@/components/post/comment-thread";
 import { PostMeta } from "@/components/post/post-meta";
 import { PostOwnerActions } from "@/components/post/post-owner-actions";
 import { PostTypeBadge } from "@/components/post/post-type-badge";
+import { ReviewRating } from "@/components/post/review-rating";
 import { SaveButton } from "@/components/post/save-button";
 import { TopicChip } from "@/components/post/topic-chip";
 import { VerifyPrompt } from "@/components/verify-prompt";
@@ -70,6 +71,8 @@ export default async function PostPage({ params, searchParams }: PageProps<"/c/[
             editedAt={post.editedAt}
           />
         </div>
+
+        {post.review && <ReviewRating rating={post.review} className="mt-3 text-sm" />}
 
         {post.topics.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-x-3 gap-y-1">

@@ -19,6 +19,7 @@ import {
   POST_TYPES,
   POSTABLE_TYPES,
 } from "@/lib/content-policy";
+import type { CourseRating } from "@/lib/data/courses";
 import { cn } from "@/lib/utils";
 
 type ComposerCourse = {
@@ -48,6 +49,8 @@ type ComposerProps = {
   initialCourseId?: string;
   // Preselected post type, e.g. "experience" from "Write a review".
   initialType?: string;
+  // The student's existing course ratings by course id, to prefill a review.
+  ratings?: Record<string, CourseRating>;
   // Editing an existing post: its id and current values. The course is fixed.
   editing?: { postId: string; values: PostFormValues };
 };
@@ -76,6 +79,7 @@ function ComposerForm({
   semesters,
   initialCourseId,
   initialType,
+  ratings,
   editing,
   state,
   action,
@@ -97,6 +101,14 @@ function ComposerForm({
   // "When did you take it?" only applies to course reviews.
   const asksSemester = type === "experience";
   const course = courses.find((c) => c.id === courseId);
+  // A review's rating starts from what was submitted, the post being edited,
+  // or the student's existing rating for this course.
+  const existing = ratings?.[courseId];
+  const rating = {
+    workloadHours: values?.workloadHours ?? (existing ? String(existing.workloadHours) : ""),
+    difficulty: values?.difficulty ?? (existing ? String(existing.difficulty) : ""),
+    wouldTakeAgain: values?.wouldTakeAgain ?? (existing ? (existing.wouldTakeAgain ? "yes" : "no") : ""),
+  };
 
   return (
     <form action={action} className="flex flex-col gap-5" noValidate>
@@ -266,6 +278,77 @@ function ComposerForm({
           </select>
           <FieldError message={errors.semester} />
         </div>
+      )}
+
+      {asksSemester && (
+        <fieldset
+          key={courseId}
+          className="flex flex-col gap-4 rounded-xl border p-4 animate-in fade-in slide-in-from-top-1 duration-200"
+        >
+          <legend className="px-1 text-sm font-medium">Your rating</legend>
+          <p className="-mt-2 text-sm text-muted-foreground">
+            Shown on your review and counted in the course&apos;s averages. You count once per course, so a
+            new review updates your rating.
+          </p>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="workloadHours">Hours per week</Label>
+              <Input
+                id="workloadHours"
+                name="workloadHours"
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={60}
+                defaultValue={rating.workloadHours}
+                placeholder="e.g. 12"
+                aria-invalid={Boolean(errors.workloadHours)}
+              />
+              <FieldError message={errors.workloadHours} />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="difficulty">Difficulty (1–10)</Label>
+              <select
+                id="difficulty"
+                name="difficulty"
+                defaultValue={rating.difficulty}
+                aria-invalid={Boolean(errors.difficulty)}
+                className={selectClass}
+              >
+                <option value="" disabled>
+                  Choose
+                </option>
+                {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                    {n === 1 ? " (easiest)" : n === 10 ? " (hardest)" : ""}
+                  </option>
+                ))}
+              </select>
+              <FieldError message={errors.difficulty} />
+            </div>
+            <div className="flex flex-col gap-2">
+              <span id="wouldTakeAgain-label" className="text-sm leading-none font-medium select-none">
+                Would you take it again?
+              </span>
+              <div role="radiogroup" aria-labelledby="wouldTakeAgain-label" className="flex h-9 items-center gap-4 text-sm">
+                {(["yes", "no"] as const).map((v) => (
+                  <label key={v} className="flex cursor-pointer items-center gap-1.5">
+                    <input
+                      type="radio"
+                      name="wouldTakeAgain"
+                      value={v}
+                      defaultChecked={rating.wouldTakeAgain === v}
+                      className="size-4 accent-brand"
+                    />
+                    {v === "yes" ? "Yes" : "No"}
+                  </label>
+                ))}
+              </div>
+              <FieldError message={errors.wouldTakeAgain} />
+            </div>
+          </div>
+        </fieldset>
       )}
 
       <div

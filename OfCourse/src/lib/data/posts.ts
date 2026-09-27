@@ -32,12 +32,17 @@ export function toAuthor(row: AuthorRow | null): Author | null {
 // 1 = cracked ... 5 = radiant) and the viewer's own vote.
 export type Bulb = { lit: number; off: number; level: number; score: number; viewerVote: -1 | 0 | 1 };
 
+// A course review's numbers: hours per week, difficulty (1-10), take again?
+export type ReviewRating = { workloadHours: number; difficulty: number; wouldTakeAgain: boolean };
+
 export type PostSummary = {
   id: string;
   title: string;
   content: string;
   type: PostType;
   semester: string | null;
+  // Set on course reviews that include a rating.
+  review: ReviewRating | null;
   createdAt: string;
   // Set when the author edited the post after publishing it.
   editedAt: string | null;
@@ -55,7 +60,7 @@ export type FeedSort = "brightest" | "new";
 export const FEED_SORTS: FeedSort[] = ["brightest", "new"];
 
 const POST_SELECT =
-  "id, title, content, type, semester, created_at, updated_at, vote_score, comment_count, " +
+  "id, title, content, type, semester, review_workload_hours, review_difficulty, review_would_take_again, created_at, updated_at, vote_score, comment_count, " +
   "lit_count, off_count, brightness_level, brightness_score, " +
   `author:profiles!posts_author_id_fkey(${AUTHOR_FIELDS}), course:courses(slug, code, name), topics(id, name)`;
 
@@ -65,6 +70,9 @@ type PostRow = {
   content: string;
   type: PostType;
   semester: string | null;
+  review_workload_hours: number | null;
+  review_difficulty: number | null;
+  review_would_take_again: boolean | null;
   created_at: string;
   updated_at: string;
   vote_score: number;
@@ -100,6 +108,10 @@ async function withViewerState(rows: PostRow[], viewerId?: string): Promise<Post
     content: r.content,
     type: r.type,
     semester: r.semester,
+    review:
+      r.review_workload_hours !== null && r.review_difficulty !== null && r.review_would_take_again !== null
+        ? { workloadHours: r.review_workload_hours, difficulty: r.review_difficulty, wouldTakeAgain: r.review_would_take_again }
+        : null,
     createdAt: r.created_at,
     editedAt: wasEdited(r.created_at, r.updated_at) ? r.updated_at : null,
     voteScore: r.vote_score,

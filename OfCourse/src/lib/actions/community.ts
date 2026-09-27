@@ -204,6 +204,10 @@ export type PostFormValues = {
   title: string;
   content: string;
   semester: string;
+  // Course reviews only: hours per week, difficulty (1-10), "yes" / "no".
+  workloadHours: string;
+  difficulty: string;
+  wouldTakeAgain: string;
   topicIds: string[];
   integrity: boolean;
 };
@@ -224,8 +228,23 @@ function readPostForm(formData: FormData): PostFormValues {
     title: text(formData, "title"),
     content: text(formData, "content"),
     semester: text(formData, "semester"),
+    workloadHours: text(formData, "workloadHours"),
+    difficulty: text(formData, "difficulty"),
+    wouldTakeAgain: text(formData, "wouldTakeAgain"),
     topicIds: formData.getAll("topicIds").filter((v): v is string => typeof v === "string"),
     integrity: formData.get("integrity") === "on",
+  };
+}
+
+// A review's rating columns (cleared for other post types). Saving a review
+// also updates the author's course rating, via a database trigger, so the
+// course averages include it.
+function reviewRating(values: PostFormValues) {
+  const isReview = values.type === "experience";
+  return {
+    review_workload_hours: isReview ? Number(values.workloadHours) : null,
+    review_difficulty: isReview ? Number(values.difficulty) : null,
+    review_would_take_again: isReview ? values.wouldTakeAgain === "yes" : null,
   };
 }
 
@@ -248,8 +267,20 @@ async function validatePost(
     errors.content = `Posts can be at most ${POST_LIMITS.contentMax.toLocaleString()} characters.`;
   }
   // Only course reviews say when the student took the course.
+  // Only course reviews say when the student took the course, and rate it.
   if (values.type === "experience") {
     if (!isValidSemester(values.semester)) errors.semester = "Choose the semester you took the course.";
+    const hours = Number(values.workloadHours);
+    if (values.workloadHours === "" || !Number.isInteger(hours) || hours < 0 || hours > 60) {
+      errors.workloadHours = "Enter your hours per week (0–60).";
+    }
+    const difficulty = Number(values.difficulty);
+    if (!Number.isInteger(difficulty) || difficulty < 1 || difficulty > 10) {
+      errors.difficulty = "Choose a difficulty from 1 to 10.";
+    }
+    if (values.wouldTakeAgain !== "yes" && values.wouldTakeAgain !== "no") {
+      errors.wouldTakeAgain = "Would you take it again?";
+    }
   } else {
     values.semester = "";
   }
@@ -304,6 +335,7 @@ export async function createPost(
       title: values.title,
       content: values.content,
       semester: values.semester || null,
+      ...reviewRating(values),
       integrity_attested_at: new Date().toISOString(),
     })
     .select("id")
@@ -357,6 +389,7 @@ export async function updatePost(
       title: values.title,
       content: values.content,
       semester: values.semester || null,
+      ...reviewRating(values),
       integrity_attested_at: new Date().toISOString(),
     })
     .eq("id", postId);
