@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 
 import { safeRedirectPath } from "@/lib/auth";
 import { emailMatchesDomain } from "@/lib/data/profiles";
+import { EMAIL_CODE_PATTERN } from "@/lib/email-codes";
 import { friendlyEmailError } from "@/lib/email-errors";
 import { isMajor } from "@/lib/majors";
 import {
@@ -226,7 +227,7 @@ export async function verifyEmailCode(_prev: CodeFormState, formData: FormData):
     : "signup";
   const next = safeRedirectPath(field(formData, "next") || "/welcome");
   if (!email) return fail("Missing email address. Start again from sign up.");
-  if (!/^\d{6,10}$/.test(code)) return fail("Enter the code from the email (just the numbers).");
+  if (!EMAIL_CODE_PATTERN.test(code)) return fail("Enter the code from the email (just the numbers).");
 
   const supabase = await createClient();
   // Sign-up and sign-in codes are interchangeable from the student's point of
@@ -324,7 +325,7 @@ export async function resetPassword(_prev: ResetState, formData: FormData): Prom
   if (email || !user) {
     // Came here by code: the code proves the student owns the email.
     if (!email) return fail("Enter the email you asked for a reset code with.");
-    if (!/^\d{6,10}$/.test(code)) return fail("Enter the code from the email (just the numbers).");
+    if (!EMAIL_CODE_PATTERN.test(code)) return fail("Enter the code from the email (just the numbers).");
     const { error } = await supabase.auth.verifyOtp({ email, token: code, type: "recovery" });
     if (error) return fail("That code didn't work. Codes work once and expire after an hour. Ask for a new one.");
   }

@@ -9,6 +9,7 @@ import {
   type CodeMode,
 } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui/button";
+import { EMAIL_CODE_PLACEHOLDER } from "@/lib/email-codes";
 
 const RESEND_SECONDS = 60;
 
@@ -53,7 +54,7 @@ export function CodeForm({
           maxLength={12}
           defaultValue={state?.error ? undefined : defaultCode}
           autoFocus
-          placeholder="123456"
+          placeholder={EMAIL_CODE_PLACEHOLDER}
           aria-invalid={Boolean(state?.error)}
           className="h-14 rounded-xl border border-input bg-background px-4 text-center font-mono text-2xl tracking-[0.4em] outline-none transition-shadow focus-visible:border-ring focus-visible:ring-4 focus-visible:ring-ring/30 aria-invalid:border-destructive"
         />

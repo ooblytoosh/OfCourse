@@ -6,6 +6,7 @@ import { requestPasswordReset, resetPassword, type ResetState } from "@/app/(aut
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { EMAIL_CODE_PLACEHOLDER } from "@/lib/email-codes";
 
 function FormError({ message }: { message?: string }) {
   return message ? (
@@ -51,7 +52,7 @@ export function ResetPasswordForm({ email, needsCode }: { email: string; needsCo
               name="code"
               inputMode="numeric"
               autoComplete="one-time-code"
-              placeholder="123456"
+              placeholder={EMAIL_CODE_PLACEHOLDER}
               required
               className="font-mono tracking-[0.3em]"
             />
