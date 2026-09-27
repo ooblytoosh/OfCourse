@@ -14,10 +14,12 @@ import { preview } from "@/lib/format";
 export function PostCard({
   post,
   signedIn,
+  canVote = true,
   showCourse = false,
 }: {
   post: PostSummary;
   signedIn: boolean;
+  canVote?: boolean;
   showCourse?: boolean;
 }) {
   const href = `/c/${post.course.slug}/posts/${post.id}`;
@@ -29,6 +31,7 @@ export function PostCard({
         voted={post.viewerFoundHelpful}
         count={post.voteScore}
         signedIn={signedIn}
+        canVote={canVote}
         layout="stacked"
         className="shrink-0 self-start"
       />

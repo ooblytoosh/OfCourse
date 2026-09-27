@@ -5,11 +5,20 @@ import { ButtonLink } from "@/components/button-link";
 import { CourseStats } from "@/components/course/course-stats";
 import { JoinButton } from "@/components/course/join-button";
 import type { CourseDetail } from "@/lib/data/courses";
+import type { Participation } from "@/lib/participation";
 import { formatCount } from "@/lib/format";
 
 // Course hero: the student stats first and biggest, with the course's name,
 // university and community size around them.
-export function CourseHeader({ course, signedIn }: { course: CourseDetail; signedIn: boolean }) {
+export function CourseHeader({
+  course,
+  signedIn,
+  participation,
+}: {
+  course: CourseDetail;
+  signedIn: boolean;
+  participation: Participation;
+}) {
   return (
     <header className="relative overflow-hidden rounded-2xl border bg-card">
       <div
@@ -58,7 +67,12 @@ export function CourseHeader({ course, signedIn }: { course: CourseDetail; signe
               <PenLine />
               Write a post
             </ButtonLink>
-            <JoinButton courseId={course.id} joined={course.viewerIsMember} signedIn={signedIn} />
+            <JoinButton
+              courseId={course.id}
+              joined={course.viewerIsMember}
+              signedIn={signedIn}
+              participation={participation}
+            />
           </div>
         </div>
       </div>

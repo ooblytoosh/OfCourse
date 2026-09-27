@@ -145,7 +145,7 @@ export async function getCourseFeed(options: {
 }
 
 export type PostDetail = PostSummary & {
-  course: { id: string; slug: string; code: string; name: string; university: string };
+  course: { id: string; slug: string; code: string; name: string; university: string; universityId: string };
 };
 
 export async function getPost(postId: string, viewerId?: string): Promise<PostDetail | null> {
@@ -155,7 +155,7 @@ export async function getPost(postId: string, viewerId?: string): Promise<PostDe
     .select(
       POST_SELECT.replace(
         "course:courses(slug, code, name)",
-        "course:courses(id, slug, code, name, university:universities(name, short_name))",
+        "course:courses(id, slug, code, name, university_id, university:universities(name, short_name))",
       ),
     )
     .eq("id", postId)
@@ -166,6 +166,7 @@ export async function getPost(postId: string, viewerId?: string): Promise<PostDe
           slug: string;
           code: string;
           name: string;
+          university_id: string;
           university: { name: string; short_name: string | null } | null;
         };
       }
@@ -182,6 +183,7 @@ export async function getPost(postId: string, viewerId?: string): Promise<PostDe
       code: data.course.code,
       name: data.course.name,
       university: data.course.university?.short_name ?? data.course.university?.name ?? "",
+      universityId: data.course.university_id,
     },
   };
 }

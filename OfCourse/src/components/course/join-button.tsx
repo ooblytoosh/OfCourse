@@ -1,22 +1,26 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { Check, ShieldCheck } from "lucide-react";
+import Link from "next/link";
 import { useOptimistic, useTransition } from "react";
 
 import { SignInLink } from "@/components/sign-in-link";
 import { useFlashError } from "@/hooks/use-flash-error";
 import { buttonVariants } from "@/components/ui/button";
 import { toggleMembership } from "@/lib/actions/community";
+import { VERIFY_HREF, type Participation } from "@/lib/participation";
 import { cn } from "@/lib/utils";
 
 export function JoinButton({
   courseId,
   joined,
   signedIn,
+  participation,
 }: {
   courseId: string;
   joined: boolean;
   signedIn: boolean;
+  participation: Participation;
 }) {
   const [optimisticJoined, setOptimisticJoined] = useOptimistic(joined);
   const [pending, startTransition] = useTransition();
@@ -30,6 +34,29 @@ export function JoinButton({
       >
         Join
       </SignInLink>
+    );
+  }
+
+  // Joining needs a verified student at this university (leaving never does).
+  if (!joined && !participation.allowed) {
+    return participation.reason === "verify" ? (
+      <Link
+        href={VERIFY_HREF}
+        className={cn(buttonVariants({ size: "lg" }), "rounded-full px-5")}
+        title={participation.message}
+      >
+        <ShieldCheck />
+        Verify to join
+      </Link>
+    ) : (
+      <button
+        type="button"
+        disabled
+        title={participation.message}
+        className={cn(buttonVariants({ variant: "outline", size: "lg" }), "rounded-full px-5")}
+      >
+        Students only
+      </button>
     );
   }
 

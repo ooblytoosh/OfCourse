@@ -1,11 +1,13 @@
 "use client";
 
 import { ArrowBigUp } from "lucide-react";
+import Link from "next/link";
 import { useOptimistic, useTransition } from "react";
 
 import { SignInLink } from "@/components/sign-in-link";
 import { useFlashError } from "@/hooks/use-flash-error";
 import { toggleHelpful } from "@/lib/actions/community";
+import { VERIFY_HREF } from "@/lib/participation";
 import { cn } from "@/lib/utils";
 
 type VoteState = { voted: boolean; count: number };
@@ -17,9 +19,17 @@ export function UpvoteButton({
   voted,
   count,
   signedIn,
+  canVote = true,
   layout = "inline",
   className,
-}: VoteState & { postId: string; signedIn: boolean; layout?: "stacked" | "inline"; className?: string }) {
+}: VoteState & {
+  postId: string;
+  signedIn: boolean;
+  // False for signed-in students who aren't verified at the course's university.
+  canVote?: boolean;
+  layout?: "stacked" | "inline";
+  className?: string;
+}) {
   const [optimistic, toggle] = useOptimistic<VoteState, void>({ voted, count }, (state) => ({
     voted: !state.voted,
     count: state.count + (state.voted ? -1 : 1),
@@ -47,6 +57,15 @@ export function UpvoteButton({
       <span>{optimistic.count}</span>
     </>
   );
+
+  if (signedIn && !canVote && !optimistic.voted) {
+    return (
+      <Link href={VERIFY_HREF} className={classes} title="Verify your university email to upvote">
+        {content}
+        <span className="sr-only">upvotes. Verify your university email to upvote.</span>
+      </Link>
+    );
+  }
 
   if (!signedIn) {
     return (

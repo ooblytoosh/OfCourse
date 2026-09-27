@@ -109,6 +109,11 @@ the contributor's profile.
   password by emailed code, log out from your profile. Names are capitalized
   at sign-up; majors come from a fixed, searchable list (`src/lib/majors.ts`,
   enforced by the `public.majors` table).
+- **Verified students only:** anyone can read, but joining courses, posting,
+  commenting, upvoting, rating and the AI need a university-verified
+  student, and only in their own university's courses (the database enforces
+  this with `public.can_participate()`). Unverified students see a prompt to
+  verify everywhere; verified students see their own school's catalog.
 - **Sign-up and onboarding:** after signing up, students enter the 6-digit code
   emailed to them (`/verify`), then see `/welcome`: a short intro and the
   OfCourse terms (`/terms`, text in `src/lib/terms.ts`). Nobody can use the app

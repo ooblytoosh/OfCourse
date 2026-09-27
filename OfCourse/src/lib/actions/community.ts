@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { queuePostEmbedding } from "@/lib/ai/index-posts";
 import { getCurrentUser } from "@/lib/auth";
 import { ACADEMIC_INTEGRITY_ATTESTATION, isPostableType, POST_LIMITS } from "@/lib/content-policy";
+import { NOT_ALLOWED_ERROR } from "@/lib/participation";
 import { isValidSemester } from "@/lib/semesters";
 import { createClient } from "@/lib/supabase/server";
 
@@ -17,6 +18,21 @@ type ActionResult = { ok: true } | { ok: false; error: string };
 
 const SIGN_IN_REQUIRED: ActionResult = { ok: false, error: "Sign in to do that." };
 const UNIQUE_VIOLATION = "23505";
+
+type Supabase = Awaited<ReturnType<typeof createClient>>;
+
+// Only students verified at the course's university can take part. The
+// database enforces this too; asking first gives a clear message.
+async function mayParticipate(supabase: Supabase, courseId: string | null | undefined): Promise<boolean> {
+  if (!courseId) return false;
+  const { data } = await supabase.rpc("can_participate", { p_course_id: courseId });
+  return data === true;
+}
+
+async function courseOfPost(supabase: Supabase, postId: string): Promise<string | null> {
+  const { data } = await supabase.from("posts").select("course_id").eq("id", postId).maybeSingle();
+  return data?.course_id ?? null;
+}
 
 function text(formData: FormData, name: string): string {
   const value = formData.get(name);
@@ -36,6 +52,10 @@ export async function toggleHelpful(postId: string): Promise<ActionResult> {
     .eq("post_id", postId)
     .eq("user_id", user.id)
     .maybeSingle();
+
+  if (!existing && !(await mayParticipate(supabase, await courseOfPost(supabase, postId)))) {
+    return { ok: false, error: NOT_ALLOWED_ERROR };
+  }
 
   const { error } = existing
     ? await supabase.from("votes").delete().eq("id", existing.id)
@@ -84,6 +104,11 @@ export async function toggleMembership(courseId: string): Promise<ActionResult> 
     .eq("user_id", user.id)
     .maybeSingle();
 
+  // Leaving is always allowed; joining needs verification at this university.
+  if (!existing && !(await mayParticipate(supabase, courseId))) {
+    return { ok: false, error: NOT_ALLOWED_ERROR };
+  }
+
   const { error } = existing
     ? await supabase.from("course_members").delete().eq("course_id", courseId).eq("user_id", user.id)
     : await supabase.from("course_members").insert({ course_id: courseId, user_id: user.id });
@@ -113,6 +138,9 @@ export async function createComment(
   }
 
   const supabase = await createClient();
+  if (!(await mayParticipate(supabase, await courseOfPost(supabase, postId)))) {
+    return { error: NOT_ALLOWED_ERROR };
+  }
 
   // Threads are two levels deep: a reply to a reply attaches to the top-level
   // comment. The parent must belong to the same post.
@@ -229,6 +257,7 @@ export async function createPost(
   const supabase = await createClient();
   const { errors, course } = await validatePost(supabase, values);
   if (!course || !isPostableType(values.type)) return fail(errors);
+  if (!(await mayParticipate(supabase, course.id))) return fail({ form: NOT_ALLOWED_ERROR });
 
   const { data: post, error } = await supabase
     .from("posts")
@@ -399,6 +428,7 @@ export async function rateCourse(_prev: RatingFormState, formData: FormData): Pr
   if (semester && !isValidSemester(semester)) return reply({ error: "Choose a valid semester." });
 
   const supabase = await createClient();
+  if (!(await mayParticipate(supabase, courseId))) return reply({ error: NOT_ALLOWED_ERROR });
   const rating = {
     workload_hours: workload,
     difficulty,

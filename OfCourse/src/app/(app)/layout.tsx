@@ -1,3 +1,4 @@
+import { ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
@@ -7,19 +8,35 @@ import { NavLinks } from "@/components/layout/nav-links";
 import { SiteHeader } from "@/components/layout/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { getProfile } from "@/lib/data/profiles";
+import { VERIFY_HREF } from "@/lib/participation";
 
 // App shell: top bar, left navigation, main content.
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   // New students agree to the terms (on /welcome) before using the app.
   const user = await getCurrentUser();
-  if (user) {
-    const profile = await getProfile(user.id);
-    if (profile && !profile.termsAcceptedAt) redirect("/welcome");
-  }
+  const profile = user ? await getProfile(user.id) : null;
+  if (profile && !profile.termsAcceptedAt) redirect("/welcome");
+  const needsVerification = Boolean(profile && !profile.verified);
 
   return (
     <>
       <SiteHeader />
+      {needsVerification && (
+        <div className="border-b border-brand/25 bg-brand/[0.08]">
+          <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2 text-sm lg:px-8">
+            <p className="flex items-center gap-2">
+              <ShieldCheck className="size-4 shrink-0 text-brand" aria-hidden />
+              <span>
+                <span className="font-medium">Verify your university email</span>
+                <span className="text-muted-foreground"> to join courses, post, comment, upvote and use the AI.</span>
+              </span>
+            </p>
+            <Link href={VERIFY_HREF} className="font-medium text-brand underline-offset-4 hover:underline">
+              Verify now →
+            </Link>
+          </div>
+        </div>
+      )}
       <div className="border-b md:hidden">
         <div className="mx-auto max-w-[1600px] overflow-x-auto px-4 py-2">
           <NavLinks orientation="horizontal" />

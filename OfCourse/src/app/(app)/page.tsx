@@ -6,6 +6,7 @@ import { SectionTitle } from "@/components/section-title";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth";
 import { getJoinedCourses, searchCourses } from "@/lib/data/courses";
+import { getProfile } from "@/lib/data/profiles";
 
 const steps = [
   { icon: PenLine, title: "Students share", body: "Notes, explanations, reviews and advice from people who took the course." },
@@ -15,8 +16,11 @@ const steps = [
 
 export default async function HomePage() {
   const user = await getCurrentUser();
+  const profile = user ? await getProfile(user.id) : null;
+  // Verified students see their own university's courses.
+  const school = profile?.verified ? profile.university : null;
   const [allCourses, joined] = await Promise.all([
-    searchCourses(),
+    searchCourses("", school?.id),
     user ? getJoinedCourses(user.id) : Promise.resolve([]),
   ]);
   const joinedSlugs = new Set(joined.map((c) => c.slug));
@@ -72,7 +76,7 @@ export default async function HomePage() {
               </Link>
             }
           >
-            Popular courses
+            {school ? `Popular at ${school.shortName}` : "Popular courses"}
           </SectionTitle>
           <CourseGrid courses={popular} />
         </section>

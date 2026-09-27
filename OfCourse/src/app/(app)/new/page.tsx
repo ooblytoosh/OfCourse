@@ -3,18 +3,40 @@ import type { Metadata } from "next";
 
 import { PageHeader } from "@/components/page-header";
 import { PostComposer } from "@/components/post/post-composer";
+import { VerifyPrompt } from "@/components/verify-prompt";
 import { requireUser } from "@/lib/auth";
 import { isPostableType, POST_TYPES, POSTABLE_TYPES, PROHIBITED_CONTENT } from "@/lib/content-policy";
 import { getCoursesWithTopics } from "@/lib/data/courses";
+import { getProfile } from "@/lib/data/profiles";
 import { semesterOptions } from "@/lib/semesters";
 
 export const metadata: Metadata = { title: "New post" };
 
 export default async function NewPostPage({ searchParams }: PageProps<"/new">) {
   const { course: courseSlug, type } = await searchParams;
-  await requireUser(typeof courseSlug === "string" ? `/new?course=${courseSlug}` : "/new");
+  const user = await requireUser(typeof courseSlug === "string" ? `/new?course=${courseSlug}` : "/new");
+  const profile = await getProfile(user.id);
 
-  const courses = await getCoursesWithTopics();
+  // Posting needs a verified student, and only in their own university's courses.
+  if (!profile?.verified || !profile.university) {
+    return (
+      <div className="mx-auto flex max-w-2xl flex-col gap-6">
+        <PageHeader
+          title="Create a post"
+          description="Share what you learned with the students taking the course after you."
+        />
+        <VerifyPrompt
+          participation={{
+            allowed: false,
+            reason: "verify",
+            message: "Verify your university email to post.",
+          }}
+        />
+      </div>
+    );
+  }
+
+  const courses = await getCoursesWithTopics(profile.university.id);
   const initialCourse = courses.find((c) => c.slug === courseSlug);
 
   return (

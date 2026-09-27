@@ -11,8 +11,11 @@ import { PostTypeBadge } from "@/components/post/post-type-badge";
 import { SaveButton } from "@/components/post/save-button";
 import { TopicChip } from "@/components/post/topic-chip";
 import { UpvoteButton } from "@/components/post/upvote-button";
+import { VerifyPrompt } from "@/components/verify-prompt";
 import { getCurrentUser } from "@/lib/auth";
 import { getComments, getPost } from "@/lib/data/posts";
+import { getProfile } from "@/lib/data/profiles";
+import { participationFor } from "@/lib/participation";
 import { formatCount } from "@/lib/format";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -30,12 +33,17 @@ export default async function PostPage({ params }: PageProps<"/c/[slug]/posts/[p
   if (!UUID.test(postId)) notFound();
 
   const user = await getCurrentUser();
-  const [post, comments] = await Promise.all([getPost(postId, user?.id), getComments(postId)]);
+  const [post, comments, profile] = await Promise.all([
+    getPost(postId, user?.id),
+    getComments(postId),
+    user ? getProfile(user.id) : Promise.resolve(null),
+  ]);
   if (!post) notFound();
   // Keep URLs canonical if the course slug in the link is wrong.
   if (post.course.slug !== slug) redirect(`/c/${post.course.slug}/posts/${post.id}`);
 
   const signedIn = Boolean(user);
+  const participation = participationFor(profile, post.course);
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
@@ -75,6 +83,7 @@ export default async function PostPage({ params }: PageProps<"/c/[slug]/posts/[p
           <UpvoteButton
             postId={post.id}
             voted={post.viewerFoundHelpful}
+            canVote={!signedIn || participation.allowed}
             count={post.voteScore}
             signedIn={signedIn}
           />
@@ -95,11 +104,16 @@ export default async function PostPage({ params }: PageProps<"/c/[slug]/posts/[p
 
       <section id="comments" className="flex scroll-mt-20 flex-col gap-5">
         <h2 className="text-lg font-semibold">Comments</h2>
-        <CommentForm postId={post.id} signedIn={signedIn} />
+        {signedIn && !participation.allowed ? (
+          <VerifyPrompt participation={participation} compact />
+        ) : (
+          <CommentForm postId={post.id} signedIn={signedIn} />
+        )}
         <CommentThread
           comments={comments}
           postId={post.id}
           signedIn={signedIn}
+          canReply={participation.allowed}
           viewerId={user?.id}
         />
       </section>

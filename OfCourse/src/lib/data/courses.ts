@@ -42,11 +42,14 @@ function sanitizeQuery(query: string): string {
 
 // Course search by code ("CS 1332", "cs1332") or name ("data structures").
 // With no query, lists every course.
-export async function searchCourses(query = ""): Promise<CourseListItem[]> {
+// Courses matching a search. With a university, only that university's
+// courses (verified students see their own school's catalog).
+export async function searchCourses(query = "", universityId?: string): Promise<CourseListItem[]> {
   const supabase = await createClient();
   const q = sanitizeQuery(query).slice(0, 100);
 
   let request = supabase.from("courses").select(COURSE_LIST_SELECT).order("code");
+  if (universityId) request = request.eq("university_id", universityId);
   if (q) {
     const compact = q.toLowerCase().replace(/[^a-z0-9]/g, "");
     const filters = [`code.ilike.%${q}%`, `name.ilike.%${q}%`];
@@ -78,6 +81,7 @@ export type CourseDetail = {
   name: string;
   description: string | null;
   university: string;
+  universityId: string;
   memberCount: number;
   // Members with a verified university email.
   verifiedStudentCount: number;
@@ -106,6 +110,7 @@ type CourseDetailRow = {
   code: string;
   name: string;
   description: string | null;
+  university_id: string;
   university: { name: string; short_name: string | null } | null;
 };
 
@@ -114,7 +119,7 @@ export async function getCourse(slug: string, viewerId?: string): Promise<Course
   const { data: course, error } = await supabase
     .from("courses")
     .select(
-      "id, slug, code, name, description, university:universities(name, short_name)",
+      "id, slug, code, name, description, university_id, university:universities(name, short_name)",
     )
     .eq("slug", slug.toLowerCase())
     .maybeSingle<CourseDetailRow>();
@@ -155,6 +160,7 @@ export async function getCourse(slug: string, viewerId?: string): Promise<Course
     name: course.name,
     description: course.description,
     university: course.university?.short_name ?? course.university?.name ?? "",
+    universityId: course.university_id,
     memberCount: members.count ?? 0,
     verifiedStudentCount: verified.count ?? 0,
     postCount: posts.count ?? 0,
@@ -222,16 +228,19 @@ export async function getCourseUnits(courseId: string, topics: Topic[]): Promise
   return units;
 }
 
-// Every course with its topics, for the post composer.
-export async function getCoursesWithTopics() {
+// Courses with their topics, for the post composer: one university's
+// courses (the student's own), or every course when none is given.
+export async function getCoursesWithTopics(universityId?: string) {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  let request = supabase
     .from("courses")
     .select(
       "id, slug, code, name, university:universities(short_name, name), " +
         "topics(id, name, unit:course_units(position, name))",
     )
-    .order("code")
+    .order("code");
+  if (universityId) request = request.eq("university_id", universityId);
+  const { data, error } = await request
     .overrideTypes<
       {
         id: string;
