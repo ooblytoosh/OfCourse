@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import type { CodeMode } from "@/app/(auth)/actions";
 import { CodeForm } from "@/components/auth/code-form";
+import { EMAIL_CODE_PATTERN } from "@/lib/email-codes";
 
 export const metadata: Metadata = { title: "Verify your email" };
 
@@ -15,7 +16,7 @@ export default async function VerifyPage({ searchParams }: PageProps<"/verify">)
   // Links in the emails point here with the code filled in. Nothing happens
   // until the student presses Verify, so mail scanners that open links can't
   // use up the code.
-  const prefilled = typeof code === "string" && /^\d{6,10}$/.test(code) ? code : "";
+  const prefilled = typeof code === "string" && EMAIL_CODE_PATTERN.test(code) ? code : "";
   const address = typeof email === "string" ? email : "";
   const codeMode = MODES.includes(mode as CodeMode) ? (mode as CodeMode) : "signup";
 

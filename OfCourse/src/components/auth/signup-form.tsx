@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { University } from "@/lib/data/profiles";
 import { UNLISTED_UNIVERSITY } from "@/lib/profile-rules";
+import { EMAIL_CODE_LENGTH } from "@/lib/email-codes";
 
 export const selectClass =
   "h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive";
@@ -131,7 +132,7 @@ function Fields({
         <p className="text-xs text-muted-foreground">
           {universityId === UNLISTED_UNIVERSITY
             ? "You can use OfCourse without a verified university for now."
-            : "We'll email you a 6-digit code. Entering it verifies you as a student there."}
+            : `We'll email you a ${EMAIL_CODE_LENGTH}-digit code. Entering it verifies you as a student there.`}
         </p>
       </div>
 

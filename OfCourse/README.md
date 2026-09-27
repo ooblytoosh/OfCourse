@@ -79,7 +79,7 @@ For the demo, use your own account and verify it with a `@gatech.edu` email
 (sign up with it, or **Settings → University verification**), so your posts
 show the verified badge.
 
-**Sign-up path:** sign up with a `@gatech.edu` email → type the 6-digit code
+**Sign-up path:** sign up with a `@gatech.edu` email → type the 8-digit code
 from the email → **Welcome** screen (intro + terms; "Agree and continue" unlocks
 once the box is checked) → home.
 
@@ -119,7 +119,7 @@ the contributor's profile.
   student, and only in their own university's courses (the database enforces
   this with `public.can_participate()`). Unverified students see a prompt to
   verify everywhere; verified students see their own school's catalog.
-- **Sign-up and onboarding:** after signing up, students enter the 6-digit code
+- **Sign-up and onboarding:** after signing up, students enter the 8-digit code
   emailed to them (`/verify`), then see `/welcome`: a short intro and the
   OfCourse terms (`/terms`, text in `src/lib/terms.ts`). Nobody can use the app
   until they agree; the time they agreed is stored in
