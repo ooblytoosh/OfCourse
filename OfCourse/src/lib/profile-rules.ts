@@ -16,3 +16,12 @@ export function normalizeUsername(value: string): string {
 // Sign-up option for "my university isn't listed": the account works, but it
 // can't be university verified.
 export const UNLISTED_UNIVERSITY = "other";
+
+// "jane doe" → "Jane Doe", "mary-kate o'neil" → "Mary-Kate O'neil". Only first
+// letters are changed, so names like "McDonald" keep their capitals.
+export function capitalizeName(value: string): string {
+  return value
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/(^|[\s-])(\p{L})/gu, (_, sep: string, letter: string) => sep + letter.toUpperCase());
+}

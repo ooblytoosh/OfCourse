@@ -102,6 +102,18 @@ export type Database = {
         Update: Record<string, never>;
         Relationships: [];
       };
+      majors: {
+        Row: {
+          name: string
+        }
+        Insert: {
+          name: string
+        }
+        Update: {
+          name?: string
+        }
+        Relationships: []
+      }
       post_embeddings: {
         Row: {
           post_id: string;

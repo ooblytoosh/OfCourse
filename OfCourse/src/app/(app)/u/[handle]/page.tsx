@@ -1,14 +1,16 @@
-import { ArrowBigUp, BadgeAlert, Bookmark, MessageSquare, PenLine } from "lucide-react";
+import { ArrowBigUp, BadgeAlert, Bookmark, LogOut, MessageSquare, PenLine } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import { signOut } from "@/app/(auth)/actions";
 import { ButtonLink } from "@/components/button-link";
 import { CourseCard } from "@/components/course/course-card";
 import { EmptyState } from "@/components/empty-state";
 import { PostCard } from "@/components/post/post-card";
 import { PostTypeBadge } from "@/components/post/post-type-badge";
 import { SectionTitle } from "@/components/section-title";
+import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
 import { VerifiedBadge } from "@/components/verified-badge";
 import { getCurrentUser } from "@/lib/auth";
@@ -87,10 +89,18 @@ export default async function ProfilePage({ params }: PageProps<"/u/[handle]">) 
           </p>
         </div>
         {isSelf && (
-          <ButtonLink href="/settings" variant="outline" className="shrink-0">
-            <PenLine />
-            Edit profile
-          </ButtonLink>
+          <div className="flex shrink-0 gap-2">
+            <ButtonLink href="/settings" variant="outline">
+              <PenLine />
+              Edit profile
+            </ButtonLink>
+            <form action={signOut}>
+              <Button type="submit" variant="outline">
+                <LogOut />
+                Log out
+              </Button>
+            </form>
+          </div>
         )}
       </header>
 

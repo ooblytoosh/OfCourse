@@ -47,15 +47,19 @@ the AI panel says AI search isn't set up.
    so signing up with a university email verifies the student.
    Supabase's built-in email sender is rate-limited (a few emails an hour); for
    real use, set up custom SMTP under **Authentication → Emails → SMTP Settings**.
-5. **Authentication → Emails → Templates:** students verify by typing a
-   6-digit code, so add the code to the **Confirm signup**, **Magic Link** and
-   **Change Email Address** templates, for example:
+5. **Authentication → Emails → Templates** (needs custom SMTP): put the code
+   in the **Confirm signup**, **Magic Link**, **Change Email Address** and
+   **Reset Password** templates. Link to `/verify` with the code filled in,
+   never straight to a confirmation URL: university mail scanners open every
+   link, which would use up the code. For example (Confirm signup):
 
    ```html
-   <h2>Your OfCourse code</h2>
-   <p>Enter this code to confirm your email: <strong>{{ .Token }}</strong></p>
-   <p>Or <a href="{{ .ConfirmationURL }}">confirm with this link</a>.</p>
+   <h2>Your OfCourse code: {{ .Token }}</h2>
+   <p><a href="{{ .SiteURL }}/verify?mode=signup&email={{ .Email }}&code={{ .Token }}">Open OfCourse to finish</a></p>
    ```
+
+   Use `mode=email` in Magic Link and `mode=email_change` in Change Email
+   Address. Reset Password only needs the code.
 6. Generate AI search embeddings for the seeded posts:
 
    ```bash
@@ -100,6 +104,11 @@ the contributor's profile.
   confirmation, two-level comments, edit/delete your own posts and comments.
 - **Profiles** (`/u/<username>`): contributions, courses, helpful votes, photo,
   university badge.
+- **Accounts:** sign in with username or email (usernames are resolved on
+  the server with the service key, so emails are never exposed), forgot
+  password by emailed code, log out from your profile. Names are capitalized
+  at sign-up; majors come from a fixed, searchable list (`src/lib/majors.ts`,
+  enforced by the `public.majors` table).
 - **Sign-up and onboarding:** after signing up, students enter the 6-digit code
   emailed to them (`/verify`), then see `/welcome`: a short intro and the
   OfCourse terms (`/terms`, text in `src/lib/terms.ts`). Nobody can use the app

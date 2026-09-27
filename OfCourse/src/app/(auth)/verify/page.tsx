@@ -11,7 +11,11 @@ const MODES: CodeMode[] = ["signup", "email", "email_change"];
 
 // Step 2 of sign-up: enter the code emailed to your university address.
 export default async function VerifyPage({ searchParams }: PageProps<"/verify">) {
-  const { email, mode, next } = await searchParams;
+  const { email, mode, next, code } = await searchParams;
+  // Links in the emails point here with the code filled in. Nothing happens
+  // until the student presses Verify, so mail scanners that open links can't
+  // use up the code.
+  const prefilled = typeof code === "string" && /^\d{6,10}$/.test(code) ? code : "";
   const address = typeof email === "string" ? email : "";
   const codeMode = MODES.includes(mode as CodeMode) ? (mode as CodeMode) : "signup";
 
@@ -25,7 +29,9 @@ export default async function VerifyPage({ searchParams }: PageProps<"/verify">)
         <p className="text-sm text-muted-foreground">
           We sent an email to{" "}
           <span className="font-medium text-foreground">{address || "your university address"}</span>.
-          Click the link in it to continue, or type the code below if the email has one.
+          {prefilled
+            ? "Your code is filled in below. Press Verify to finish."
+            : "Type the code from that email below, or click the link in it."}
         </p>
         <p className="text-xs text-muted-foreground">
           Open the link in this browser. It can take a minute to arrive, so check spam too.
@@ -36,6 +42,7 @@ export default async function VerifyPage({ searchParams }: PageProps<"/verify">)
           email={address}
           mode={codeMode}
           next={typeof next === "string" ? next : "/welcome"}
+          defaultCode={prefilled}
         />
       ) : (
         <p className="text-center text-sm">

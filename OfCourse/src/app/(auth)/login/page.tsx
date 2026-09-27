@@ -30,10 +30,15 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
             next={returnTo}
             initialError={typeof error === "string" ? error : undefined}
             fields={[
-              { name: "email", label: "School email", type: "email", autoComplete: "email" },
+              { name: "identifier", label: "Username or email", type: "text", autoComplete: "username" },
               { name: "password", label: "Password", type: "password", autoComplete: "current-password" },
             ]}
           />
+          <p className="text-center text-sm">
+            <Link href="/forgot-password" className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
+              Forgot your password?
+            </Link>
+          </p>
           <p className="text-center text-sm text-muted-foreground">
             New here?{" "}
             <Link href="/signup" className="font-medium text-foreground underline-offset-4 hover:underline">

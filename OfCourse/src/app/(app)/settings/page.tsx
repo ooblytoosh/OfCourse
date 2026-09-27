@@ -2,12 +2,10 @@ import { ExternalLink } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { signOut } from "@/app/(auth)/actions";
 import { PageHeader } from "@/components/page-header";
 import { AvatarUploader } from "@/components/profile/avatar-uploader";
 import { ProfileForm } from "@/components/profile/profile-form";
 import { VerificationForm } from "@/components/profile/verification-form";
-import { Button } from "@/components/ui/button";
 import { VerifiedBadge } from "@/components/verified-badge";
 import { requireUser } from "@/lib/auth";
 import { emailMatchesDomain, getProfile, getUniversities } from "@/lib/data/profiles";
@@ -115,16 +113,13 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
       </Section>
 
       <Section title="Account">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <p className="text-sm">
-            Signed in as <span className="font-medium">{email}</span>
-          </p>
-          <form action={signOut}>
-            <Button type="submit" variant="outline">
-              Sign out
-            </Button>
-          </form>
-        </div>
+        <p className="text-sm">
+          Signed in as <span className="font-medium">{email}</span>. To log out, use{" "}
+          <Link href="/profile" className="font-medium underline-offset-4 hover:underline">
+            your profile
+          </Link>
+          .
+        </p>
       </Section>
     </div>
   );

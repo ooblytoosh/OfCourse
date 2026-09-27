@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 
 import { signUp, type SignupState } from "@/app/(auth)/actions";
+import { MajorSelect } from "@/components/major-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -130,7 +131,7 @@ function Fields({
         <p className="text-xs text-muted-foreground">
           {universityId === UNLISTED_UNIVERSITY
             ? "You can use OfCourse without a verified university for now."
-            : "We'll email you a link. Confirming it verifies you as a student there."}
+            : "We'll email you a 6-digit code. Entering it verifies you as a student there."}
         </p>
       </div>
 
@@ -151,7 +152,7 @@ function Fields({
           <Label htmlFor="major">
             Major <span className="font-normal text-muted-foreground">(optional)</span>
           </Label>
-          <Input id="major" name="major" defaultValue={values?.major} placeholder="e.g. Computer Science" aria-invalid={Boolean(errors.major)} />
+          <MajorSelect id="major" defaultValue={values?.major} invalid={Boolean(errors.major)} />
           <FieldError message={errors.major} />
         </div>
         <div className="flex flex-col gap-2">

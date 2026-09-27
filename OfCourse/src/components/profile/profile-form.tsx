@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 
 import { selectClass } from "@/components/auth/signup-form";
+import { MajorSelect } from "@/components/major-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,7 +52,7 @@ export function ProfileForm({
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="major">Major</Label>
-          <Input id="major" name="major" defaultValue={values.major} maxLength={PROFILE_LIMITS.major} aria-invalid={Boolean(errors.major)} />
+          <MajorSelect id="major" defaultValue={values.major} invalid={Boolean(errors.major)} />
           <FieldError message={errors.major} />
         </div>
         <div className="flex flex-col gap-2">
