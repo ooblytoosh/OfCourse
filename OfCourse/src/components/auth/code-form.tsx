@@ -13,7 +13,17 @@ import { Button } from "@/components/ui/button";
 const RESEND_SECONDS = 60;
 
 // "Enter the code we emailed you." Used after sign-up and in Settings.
-export function CodeForm({ email, mode, next }: { email: string; mode: CodeMode; next: string }) {
+export function CodeForm({
+  email,
+  mode,
+  next,
+  defaultCode = "",
+}: {
+  email: string;
+  mode: CodeMode;
+  next: string;
+  defaultCode?: string;
+}) {
   const [state, action, pending] = useActionState<CodeFormState, FormData>(verifyEmailCode, undefined);
   const [cooldown, setCooldown] = useState(RESEND_SECONDS);
   const [notice, setNotice] = useState<string | null>(null);
@@ -41,6 +51,7 @@ export function CodeForm({ email, mode, next }: { email: string; mode: CodeMode;
           autoComplete="one-time-code"
           pattern="[0-9 ]*"
           maxLength={12}
+          defaultValue={state?.error ? undefined : defaultCode}
           autoFocus
           placeholder="123456"
           aria-invalid={Boolean(state?.error)}

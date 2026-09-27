@@ -6,6 +6,7 @@ import { refresh } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { emailMatchesDomain } from "@/lib/data/profiles";
 import { friendlyEmailError } from "@/lib/email-errors";
+import { isMajor } from "@/lib/majors";
 import {
   gradYearOptions,
   normalizeUsername,
@@ -63,7 +64,7 @@ export async function updateProfile(
   if (!USERNAME_PATTERN.test(values.username)) {
     errors.username = "Use 3–24 lowercase letters, numbers or underscores.";
   }
-  if (values.major.length > PROFILE_LIMITS.major) errors.major = "That major is too long.";
+  if (values.major && !isMajor(values.major)) errors.major = "Choose your major from the list.";
   if (values.gradYear && !gradYearOptions().includes(Number(values.gradYear))) {
     errors.gradYear = "Choose your graduation year.";
   }

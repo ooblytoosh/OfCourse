@@ -27,7 +27,7 @@ export function CourseTabs({
                 className={cn(
                   "-mb-px flex items-center gap-2 border-b-2 py-2.5 text-sm font-medium transition-colors duration-200",
                   isActive
-                    ? "border-foreground text-foreground"
+                    ? "border-brand text-foreground"
                     : "border-transparent text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -35,7 +35,7 @@ export function CourseTabs({
                 <span
                   className={cn(
                     "rounded-md px-1.5 py-0.5 text-xs tabular-nums",
-                    isActive ? "bg-foreground text-background" : "bg-muted",
+                    isActive ? "bg-brand text-brand-foreground" : "bg-muted",
                   )}
                 >
                   {counts[tab]}

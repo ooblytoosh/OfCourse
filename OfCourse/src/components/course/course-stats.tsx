@@ -27,10 +27,10 @@ function MetricCard({
 }) {
   const tone = reading ? TONE_CLASSES[reading.tone] : null;
   return (
-    <div className="surface flex flex-col gap-3 p-4">
-      <div className="flex items-center justify-between gap-2">
-        <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-          <Icon className="size-3.5" aria-hidden />
+    <div className="flex min-w-0 flex-col gap-2 rounded-xl border bg-background/60 p-3 backdrop-blur-sm sm:gap-3 sm:p-4">
+      <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
+        <p className="flex items-center gap-1.5 text-[0.7rem] font-medium text-muted-foreground sm:text-xs">
+          <Icon className="hidden size-3.5 sm:block" aria-hidden />
           {label}
         </p>
         {reading && (
@@ -39,9 +39,9 @@ function MetricCard({
           </span>
         )}
       </div>
-      <p className="flex items-baseline gap-1">
-        <span className={cn("text-3xl font-semibold tracking-tight tabular-nums", tone?.text)}>{value}</span>
-        {unit && <span className="text-sm text-muted-foreground">{unit}</span>}
+      <p className="flex flex-wrap items-baseline gap-x-1">
+        <span className={cn("text-2xl font-semibold tracking-tight tabular-nums sm:text-4xl", tone?.text)}>{value}</span>
+        {unit && <span className="text-xs text-muted-foreground sm:text-sm">{unit}</span>}
       </p>
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted" aria-hidden>
         <div
@@ -58,7 +58,7 @@ export function CourseStats({ course }: { course: CourseDetail }) {
   const s = course.stats;
   return (
     <section aria-label="Course stats" className="flex flex-col gap-2">
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         <MetricCard
           icon={Clock}
           label="Typical Workload"

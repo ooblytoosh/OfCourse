@@ -21,12 +21,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <>
       <SiteHeader />
       <div className="border-b md:hidden">
-        <div className="mx-auto max-w-7xl overflow-x-auto px-4 py-2">
+        <div className="mx-auto max-w-[1600px] overflow-x-auto px-4 py-2">
           <NavLinks orientation="horizontal" />
         </div>
       </div>
-      <div className="mx-auto flex w-full max-w-7xl flex-1 gap-8 px-4">
-        <aside className="hidden w-52 shrink-0 md:block">
+      <div className="mx-auto flex w-full max-w-[1600px] flex-1 gap-6 px-4 lg:gap-10 lg:px-8">
+        <aside className="hidden w-52 shrink-0 md:block lg:w-56">
           <div className="sticky top-14 flex flex-col gap-6 py-6">
             <NavLinks orientation="vertical" />
             <Suspense fallback={null}>
@@ -40,7 +40,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             </Link>
           </div>
         </aside>
-        <main className="min-w-0 flex-1 py-8">{children}</main>
+        <main className="min-w-0 flex-1 py-6 lg:py-10">
+          <div className="mx-auto w-full max-w-[1280px]">{children}</div>
+        </main>
+        {/* Balances the left navigation so content sits in the middle of wide screens. */}
+        <div aria-hidden className="hidden w-56 shrink-0 min-[1700px]:block" />
       </div>
     </>
   );

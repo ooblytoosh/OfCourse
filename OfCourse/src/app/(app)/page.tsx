@@ -6,7 +6,6 @@ import { SectionTitle } from "@/components/section-title";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth";
 import { getJoinedCourses, searchCourses } from "@/lib/data/courses";
-import { siteConfig } from "@/lib/site";
 
 const steps = [
   { icon: PenLine, title: "Students share", body: "Notes, explanations, reviews and advice from people who took the course." },
@@ -29,8 +28,12 @@ export default async function HomePage() {
   return (
     <div className="flex flex-col gap-12">
       <section className="flex flex-col items-start gap-5 pt-4">
-        <h1 className="max-w-2xl text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
-          {siteConfig.tagline}
+        <p className="inline-flex items-center gap-1.5 rounded-full border bg-card/70 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur">
+          <Sparkles className="size-3.5 text-brand" aria-hidden />
+          Built by students, for students
+        </p>
+        <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-balance sm:text-6xl">
+          Learn from the <span className="text-gradient">students who took it.</span>
         </h1>
         <p className="max-w-xl text-lg text-muted-foreground">
           Real notes, reviews and advice from students who already took your courses, plus AI
@@ -80,7 +83,7 @@ export default async function HomePage() {
         <ol className="grid gap-6 sm:grid-cols-3">
           {steps.map(({ icon: Icon, title, body }) => (
             <li key={title} className="flex gap-3">
-              <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-brand/10 text-brand">
+              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-gradient text-white shadow-[0_8px_20px_-10px_var(--brand)]">
                 <Icon className="size-4" aria-hidden />
               </span>
               <div>

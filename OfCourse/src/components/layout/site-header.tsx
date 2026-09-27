@@ -25,7 +25,7 @@ export async function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-md">
-      <div className="mx-auto flex h-14 max-w-7xl items-center gap-3 px-4">
+      <div className="mx-auto flex h-14 max-w-[1600px] items-center gap-3 px-4 lg:px-8">
         <Logo compact className="shrink-0" />
 
         {/* Global course search. */}
@@ -49,7 +49,7 @@ export async function SiteHeader() {
           {user ? (
             <Link href="/profile" aria-label="Your profile" className="rounded-full">
               <Avatar>
-                <AvatarFallback>{initials(displayName)}</AvatarFallback>
+                <AvatarFallback className="bg-brand-gradient font-semibold text-white">{initials(displayName)}</AvatarFallback>
               </Avatar>
             </Link>
           ) : (

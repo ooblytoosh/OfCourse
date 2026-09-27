@@ -29,7 +29,7 @@ export function VerifiedBadge({
         className,
       )}
     >
-      <BadgeCheck className={cn("text-foreground", size === "lg" ? "size-4" : "size-3.5")} aria-hidden />
+      <BadgeCheck className={cn("text-sky-500 dark:text-sky-400", size === "lg" ? "size-4" : "size-3.5")} aria-hidden />
       <span>
         {university}
         {size === "lg" && " Verified"}

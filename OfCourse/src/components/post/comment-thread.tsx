@@ -5,7 +5,9 @@ import Link from "next/link";
 import { useCallback, useState, useTransition } from "react";
 
 import { CommentForm } from "@/components/post/comment-form";
+import { toast } from "@/components/toaster";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { authorName, UserAvatar } from "@/components/user-avatar";
 import { VerifiedBadge } from "@/components/verified-badge";
@@ -30,6 +32,7 @@ function CommentBody({
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(comment.content);
   const [error, setError] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
   const [pending, startTransition] = useTransition();
   const isOwn = Boolean(viewerId) && comment.author?.id === viewerId;
 
@@ -51,13 +54,12 @@ function CommentBody({
       } else setError(result.error);
     });
 
-  const remove = () => {
-    if (!confirm("Delete this comment?")) return;
+  const remove = () =>
     startTransition(async () => {
       const result = await deleteComment(comment.id);
-      if (!result.ok) setError(result.error);
+      if (result.ok) toast("Comment deleted");
+      else setError(result.error);
     });
-  };
 
   return (
     <>
@@ -139,7 +141,15 @@ function CommentBody({
                 <Pencil className="size-3.5" />
                 Edit
               </button>
-              <button type="button" className={actionClass} onClick={remove} disabled={pending}>
+              <ConfirmDialog
+                open={confirming}
+                onOpenChange={setConfirming}
+                title="Delete this comment?"
+                description="Replies to it stay, but your comment is removed for everyone."
+                confirmLabel="Delete comment"
+                onConfirm={remove}
+              />
+              <button type="button" className={actionClass} onClick={() => setConfirming(true)} disabled={pending}>
                 <Trash2 className="size-3.5" />
                 Delete
               </button>
