@@ -49,7 +49,7 @@ export async function SiteHeader() {
           {user ? (
             <Link href="/profile" aria-label="Your profile" className="rounded-full">
               <Avatar>
-                <AvatarFallback className="bg-brand-gradient font-semibold text-white">{initials(displayName)}</AvatarFallback>
+                <AvatarFallback className="bg-brand-gradient font-semibold text-brand-foreground">{initials(displayName)}</AvatarFallback>
               </Avatar>
             </Link>
           ) : (

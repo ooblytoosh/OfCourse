@@ -31,7 +31,7 @@ export function UpvoteButton({
     "group/vote relative z-10 inline-flex items-center justify-center rounded-lg border font-semibold tabular-nums transition-all duration-150 active:scale-95",
     layout === "stacked" ? "w-11 flex-col gap-0 py-1.5 text-xs" : "h-8 gap-1 px-2.5 text-sm",
     optimistic.voted
-      ? "border-transparent bg-brand-gradient text-white shadow-[0_6px_16px_-8px_var(--brand)]"
+      ? "border-transparent bg-brand-gradient text-brand-foreground shadow-[0_6px_16px_-8px_var(--brand)]"
       : "bg-card text-muted-foreground hover:border-brand/50 hover:text-brand",
     className,
   );

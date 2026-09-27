@@ -176,7 +176,7 @@ export function CourseChat({
               id="ask-heading"
               className="flex items-center gap-1.5 font-semibold"
             >
-              <span className="grid size-6 place-items-center rounded-md bg-brand-gradient text-white">
+              <span className="grid size-6 place-items-center rounded-md bg-brand-gradient text-brand-foreground">
                 <Sparkles className="size-3.5" aria-hidden />
               </span>
               Ask the student knowledge

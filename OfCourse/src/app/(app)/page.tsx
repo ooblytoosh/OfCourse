@@ -33,7 +33,7 @@ export default async function HomePage() {
           Built by students, for students
         </p>
         <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-balance sm:text-6xl">
-          Learn from the <span className="text-gradient">students who took it.</span>
+          Learn from the <span className="text-gradient animate-gold">students who took it.</span>
         </h1>
         <p className="max-w-xl text-lg text-muted-foreground">
           Real notes, reviews and advice from students who already took your courses, plus AI
@@ -83,7 +83,7 @@ export default async function HomePage() {
         <ol className="grid gap-6 sm:grid-cols-3">
           {steps.map(({ icon: Icon, title, body }) => (
             <li key={title} className="flex gap-3">
-              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-gradient text-white shadow-[0_8px_20px_-10px_var(--brand)]">
+              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-gradient text-brand-foreground shadow-[0_8px_20px_-10px_var(--brand)]">
                 <Icon className="size-4" aria-hidden />
               </span>
               <div>

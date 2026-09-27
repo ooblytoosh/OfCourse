@@ -32,7 +32,7 @@ export function CourseHeader({ course, signedIn }: { course: CourseDetail; signe
               <span className="font-medium text-foreground">{course.code}</span>
             </nav>
             <h1 className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-3xl leading-tight font-semibold tracking-tight text-balance sm:text-4xl">
-              <span className="rounded-lg bg-brand-gradient px-2.5 py-1 font-mono text-base font-semibold text-white shadow-[0_6px_18px_-8px_var(--brand)] sm:text-lg">
+              <span className="rounded-lg shine bg-brand-gradient px-2.5 py-1 font-mono text-base font-semibold text-brand-foreground shadow-[0_6px_18px_-8px_var(--brand)] sm:text-lg">
                 {course.code}
               </span>
               {course.name}
