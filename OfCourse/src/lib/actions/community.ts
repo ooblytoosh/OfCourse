@@ -216,7 +216,12 @@ async function validatePost(
   } else if (values.content.length > POST_LIMITS.contentMax) {
     errors.content = `Posts can be at most ${POST_LIMITS.contentMax.toLocaleString()} characters.`;
   }
-  if (!isValidSemester(values.semester)) errors.semester = "Choose the semester you took the course.";
+  // Only course reviews say when the student took the course.
+  if (values.type === "experience") {
+    if (!isValidSemester(values.semester)) errors.semester = "Choose the semester you took the course.";
+  } else {
+    values.semester = "";
+  }
   if (values.topicIds.length > POST_LIMITS.maxTopics) {
     errors.topicIds = `Pick at most ${POST_LIMITS.maxTopics} topics.`;
   }
@@ -267,7 +272,7 @@ export async function createPost(
       type: values.type,
       title: values.title,
       content: values.content,
-      semester: values.semester,
+      semester: values.semester || null,
       integrity_attested_at: new Date().toISOString(),
     })
     .select("id")
@@ -320,7 +325,7 @@ export async function updatePost(
       type: values.type,
       title: values.title,
       content: values.content,
-      semester: values.semester,
+      semester: values.semester || null,
       integrity_attested_at: new Date().toISOString(),
     })
     .eq("id", postId);

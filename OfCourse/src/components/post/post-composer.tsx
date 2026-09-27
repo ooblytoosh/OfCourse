@@ -87,18 +87,25 @@ function ComposerForm({
 }) {
   const errors = state?.errors ?? {};
   // Integrity must be re-confirmed on every save, so edits start unchecked.
-  const values = state?.values ?? (editing && { ...editing.values, integrity: false });
+  const values =
+    state?.values ?? (editing && { ...editing.values, integrity: false });
 
   const defaultCourseId = values?.courseId ?? initialCourseId ?? "";
   const [courseId, setCourseId] = useState(defaultCourseId);
   const [integrity, setIntegrity] = useState(values?.integrity ?? false);
+  const [type, setType] = useState(values?.type ?? initialType ?? "");
+  // "When did you take it?" only applies to course reviews.
+  const asksSemester = type === "experience";
   const course = courses.find((c) => c.id === courseId);
 
   return (
     <form action={action} className="flex flex-col gap-5" noValidate>
       {editing && <input type="hidden" name="postId" value={editing.postId} />}
       {errors.form && (
-        <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive" role="alert">
+        <p
+          className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive"
+          role="alert"
+        >
           {errors.form}
         </p>
       )}
@@ -109,7 +116,10 @@ function ComposerForm({
           {editing ? (
             <>
               <input type="hidden" name="courseId" value={defaultCourseId} />
-              <p id="courseId" className="flex h-9 items-center rounded-lg bg-muted px-2.5 text-sm">
+              <p
+                id="courseId"
+                className="flex h-9 items-center rounded-lg bg-muted px-2.5 text-sm"
+              >
                 {course ? `${course.code}: ${course.name}` : "This course"}
               </p>
             </>
@@ -141,6 +151,7 @@ function ComposerForm({
             id="type"
             name="type"
             defaultValue={values?.type ?? initialType ?? ""}
+            onChange={(e) => setType(e.target.value)}
             aria-invalid={Boolean(errors.type)}
             className={selectClass}
           >
@@ -186,14 +197,19 @@ function ComposerForm({
 
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-2 text-sm font-medium">
-          Topics <span className="font-normal text-muted-foreground">(optional, up to {POST_LIMITS.maxTopics})</span>
+          Topics{" "}
+          <span className="font-normal text-muted-foreground">
+            (optional, up to {POST_LIMITS.maxTopics})
+          </span>
         </legend>
         {course ? (
           course.topics.length > 0 ? (
             <div className="flex flex-col gap-3" key={course.id}>
               {[...new Set(course.topics.map((t) => t.unit))].map((unit) => (
                 <div key={unit} className="flex flex-col gap-1.5">
-                  <p className="text-xs font-medium text-muted-foreground">{unit}</p>
+                  <p className="text-xs font-medium text-muted-foreground">
+                    {unit}
+                  </p>
                   <div className="flex flex-wrap gap-2">
                     {course.topics
                       .filter((t) => t.unit === unit)
@@ -217,39 +233,47 @@ function ComposerForm({
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">This course has no topics yet.</p>
+            <p className="text-sm text-muted-foreground">
+              This course has no topics yet.
+            </p>
           )
         ) : (
-          <p className="text-sm text-muted-foreground">Choose a course to see its topics.</p>
+          <p className="text-sm text-muted-foreground">
+            Choose a course to see its topics.
+          </p>
         )}
         <FieldError message={errors.topicIds} />
       </fieldset>
 
-      <div className="flex flex-col gap-2 sm:max-w-xs">
-        <Label htmlFor="semester">Semester you took it</Label>
-        <select
-          id="semester"
-          name="semester"
-          defaultValue={values?.semester ?? ""}
-          aria-invalid={Boolean(errors.semester)}
-          className={selectClass}
-        >
-          <option value="" disabled>
-            Choose a semester
-          </option>
-          {semesters.map((s) => (
-            <option key={s} value={s}>
-              {s}
+      {asksSemester && (
+        <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-top-1 duration-200 sm:max-w-xs">
+          <Label htmlFor="semester">When did you take it?</Label>
+          <select
+            id="semester"
+            name="semester"
+            defaultValue={values?.semester ?? ""}
+            aria-invalid={Boolean(errors.semester)}
+            className={selectClass}
+          >
+            <option value="" disabled>
+              Choose a semester
             </option>
-          ))}
-        </select>
-        <FieldError message={errors.semester} />
-      </div>
+            {semesters.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+          <FieldError message={errors.semester} />
+        </div>
+      )}
 
       <div
         className={cn(
           "flex flex-col gap-2 rounded-xl border p-4",
-          errors.integrity ? "border-destructive bg-destructive/5" : "bg-muted/50",
+          errors.integrity
+            ? "border-destructive bg-destructive/5"
+            : "bg-muted/50",
         )}
       >
         <label className="flex cursor-pointer gap-3 text-sm">
@@ -281,8 +305,19 @@ function ComposerForm({
             Confirm academic integrity to {editing ? "save" : "publish"}
           </span>
         )}
-        <Button type="submit" size="lg" className="px-5" disabled={pending || !integrity}>
-          {pending ? (editing ? "Saving…" : "Publishing…") : editing ? "Save changes" : "Publish"}
+        <Button
+          type="submit"
+          size="lg"
+          className="px-5"
+          disabled={pending || !integrity}
+        >
+          {pending
+            ? editing
+              ? "Saving…"
+              : "Publishing…"
+            : editing
+              ? "Save changes"
+              : "Publish"}
         </Button>
       </div>
     </form>

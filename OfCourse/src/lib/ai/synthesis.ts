@@ -1,7 +1,7 @@
 import type OpenAI from "openai";
 
 import { AI_LIMITS, CHAT_MODEL } from "@/lib/ai/config";
-import { POST_TYPES } from "@/lib/content-policy";
+import { COURSE_TABS, POST_TYPES, tabForPostType } from "@/lib/content-policy";
 import type { PostSummary } from "@/lib/data/posts";
 
 // Prompting and answer clean-up for AI search. Free of Next.js imports so it
@@ -9,8 +9,17 @@ import type { PostSummary } from "@/lib/data/posts";
 
 type SourcePost = Pick<
   PostSummary,
-  "title" | "content" | "type" | "semester" | "topics" | "voteScore" | "author"
+  "id" | "title" | "content" | "type" | "semester" | "topics" | "voteScore" | "author"
 >;
+
+export type SourceReply = { author: string; text: string };
+
+// Extra course context that isn't a post: replies under each source, and the
+// course's rating averages.
+export type SynthesisContext = {
+  replies?: Map<string, SourceReply[]>;
+  ratings?: { workloadHours: number; difficulty: number; wouldTakeAgainPct: number; count: number } | null;
+};
 
 const SYSTEM_PROMPT = `You are the AI knowledge layer for OfCourse, where university students share what they learned in a course.
 
@@ -23,13 +32,17 @@ Rules:
 - Never invent student experiences, quotes, names, post titles, links or sources. Only say a student said something if their post says it.
 - Some sources are other students' questions or opinions. The student asking now is someone else: never tell them "your intuition is right" or reply as if they wrote a source.
 - Make clear what is your synthesis and what students actually said (for example: "Jordan explains that…" only when that post says so).
+- Sources come from every part of the course page: Course Reviews (how the course went, workload, difficulty), Study Threads & Advice (questions, tips, and the student replies that answer them) and Resources & Topics (notes, study guides, concept explanations). Use whichever fit the question, and combine them when that helps.
+- Replies listed under a source belong to it: cite that source's label for what a reply says.
+- Course rating averages, when given, come from students' ratings. You may quote them as averages without a citation.
 - Earlier messages in the conversation are context only (so follow-up questions make sense). Cite only the sources listed in the latest message.
 - Don't include URLs or a list of sources at the end; the app shows the sources.
 - Be concise: at most about 180 words. Use short paragraphs or "- " bullet points. No headings.`;
 
-function formatSource(post: SourcePost, label: string): string {
+function formatSource(post: SourcePost, label: string, replies: SourceReply[] = []): string {
   const author = post.author?.name || post.author?.username || "a student";
   const meta = [
+    `${COURSE_TABS[tabForPostType(post.type)].label} tab`,
     POST_TYPES[post.type]?.label ?? post.type,
     `by ${author}`,
     post.semester ? `took the course ${post.semester}` : null,
@@ -41,7 +54,16 @@ function formatSource(post: SourcePost, label: string): string {
   const body = post.content.length > AI_LIMITS.sourceChars
     ? `${post.content.slice(0, AI_LIMITS.sourceChars)}…`
     : post.content;
-  return `[${label}] "${post.title}" (${meta})\n${body}`;
+  const replyLines = replies.map((r) => `- ${r.author}: ${r.text}`).join("\n");
+  return `[${label}] "${post.title}" (${meta})\n${body}${replyLines ? `\nReplies from students:\n${replyLines}` : ""}`;
+}
+
+function formatRatings(ratings: NonNullable<SynthesisContext["ratings"]>): string {
+  return (
+    `Course rating averages from ${ratings.count} students (not a post): ` +
+    `workload ${ratings.workloadHours} hrs/week, difficulty ${ratings.difficulty}/10, ` +
+    `${ratings.wouldTakeAgainPct}% would take it again.`
+  );
 }
 
 // Keep only citations that point at a real source, and remove any link.
@@ -86,15 +108,19 @@ export async function synthesize(
   question: string,
   sources: SourcePost[],
   history: ChatTurn[] = [],
+  extra: SynthesisContext = {},
 ) {
-  const context = sources.map((post, i) => formatSource(post, `S${i + 1}`)).join("\n\n---\n\n");
+  const context = sources
+    .map((post, i) => formatSource(post, `S${i + 1}`, extra.replies?.get(post.id)))
+    .join("\n\n---\n\n");
+  const ratings = extra.ratings ? `${formatRatings(extra.ratings)}\n\n` : "";
   const isReasoningModel = /^(gpt-5|o\d)/.test(CHAT_MODEL);
   const completion = await openai.chat.completions.create({
     model: CHAT_MODEL,
     messages: [
       { role: "system", content: SYSTEM_PROMPT },
       ...historyMessages(history),
-      { role: "user", content: `Student posts from this course:\n\n${context}\n\nQuestion: ${question}` },
+      { role: "user", content: `${ratings}Student posts from this course:\n\n${context}\n\nQuestion: ${question}` },
     ],
     max_completion_tokens: isReasoningModel ? 2000 : 500,
     ...(isReasoningModel ? { reasoning_effort: "low" as const } : {}),

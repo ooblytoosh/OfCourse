@@ -1,6 +1,6 @@
 "use client";
 
-import { MessageSquareReply, Pencil, Trash2 } from "lucide-react";
+import { ChevronDown, MessageSquareReply, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useState, useTransition } from "react";
 
@@ -16,6 +16,7 @@ import { POST_LIMITS } from "@/lib/content-policy";
 import type { CommentNode } from "@/lib/data/posts";
 import { timeAgo } from "@/lib/format";
 import { profileHref } from "@/lib/links";
+import { cn } from "@/lib/utils";
 
 const actionClass =
   "inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground";
@@ -174,41 +175,73 @@ function TopLevelComment({
   canReply: boolean;
   viewerId?: string;
 }) {
-  const [replying, setReplying] = useState(false);
-  const closeReply = useCallback(() => setReplying(false), []);
+  // Who the open reply box answers: the comment itself or one of its replies.
+  // Replies to a reply stay in this thread (one level deep) and start with an
+  // @mention so it's clear who they answer.
+  const [replyTo, setReplyTo] = useState<CommentNode | null>(null);
+  const [showReplies, setShowReplies] = useState(false);
+  const closeReply = useCallback(() => setReplyTo(null), []);
+  const replyCount = comment.replies.length;
+
+  const replyButton = (target: CommentNode) =>
+    canReply && !target.deleted && replyTo?.id !== target.id ? (
+      <button
+        type="button"
+        onClick={() => {
+          setReplyTo(target);
+          setShowReplies(true);
+        }}
+        className={actionClass}
+      >
+        <MessageSquareReply className="size-3.5" />
+        Reply
+      </button>
+    ) : null;
 
   return (
     <li className="flex flex-col gap-2">
       <CommentBody comment={comment} viewerId={viewerId}>
-        {canReply && !comment.deleted && !replying && (
-          <button type="button" onClick={() => setReplying(true)} className={actionClass}>
-            <MessageSquareReply className="size-3.5" />
-            Reply
+        {replyButton(comment)}
+        {replyCount > 0 && (
+          <button
+            type="button"
+            aria-expanded={showReplies}
+            onClick={() => setShowReplies((open) => !open)}
+            className={cn(actionClass, "text-brand hover:text-brand")}
+          >
+            <ChevronDown
+              className={cn("size-3.5 transition-transform duration-200", showReplies && "rotate-180")}
+            />
+            {showReplies ? "Hide replies" : `Show ${replyCount} ${replyCount === 1 ? "reply" : "replies"}`}
           </button>
         )}
       </CommentBody>
 
-      {replying && (
+      {showReplies && replyCount > 0 && (
+        <ul className="ml-3 flex flex-col gap-4 border-l-2 pl-5 animate-in fade-in slide-in-from-top-1 duration-200">
+          {comment.replies.map((reply) => (
+            <li key={reply.id}>
+              <CommentBody comment={reply} viewerId={viewerId}>
+                {replyButton(reply)}
+              </CommentBody>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {replyTo && (
         <div className="pl-8">
           <CommentForm
+            key={replyTo.id}
             postId={postId}
-            parentId={comment.id}
+            parentId={replyTo.id}
             signedIn={signedIn}
-            placeholder={`Reply to ${authorName(comment.author)}`}
+            placeholder={`Reply to ${authorName(replyTo.author)}`}
+            defaultValue={replyTo.id !== comment.id && replyTo.author?.username ? `@${replyTo.author.username} ` : ""}
             autoFocus
             onDone={closeReply}
           />
         </div>
-      )}
-
-      {comment.replies.length > 0 && (
-        <ul className="ml-3 flex flex-col gap-4 border-l-2 pl-5">
-          {comment.replies.map((reply) => (
-            <li key={reply.id}>
-              <CommentBody comment={reply} viewerId={viewerId} />
-            </li>
-          ))}
-        </ul>
       )}
     </li>
   );

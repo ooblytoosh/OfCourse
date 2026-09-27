@@ -99,6 +99,11 @@ the contributor's profile.
   Threads & Advice** (Hot / New / Top) and **Resources & Topics** (by syllabus
   unit); and a **course syllabus** sidebar whose topics filter the resources.
   Posts can be upvoted (one per student) and saved.
+- **Explore** (`/courses`): recommended classes with a reason for each
+  (classmates from your courses, students in your major, ratings), then the
+  full catalog for your university.
+- **Comments:** replies collapse behind "Show N replies"; replying to a reply
+  stays in the same thread with an @mention.
 - **Posts:** types (discussion, study advice, notes, study guide, concept
   explanation, course review), topics, semester, required academic-integrity
   confirmation, two-level comments, edit/delete your own posts and comments.
@@ -123,8 +128,10 @@ the contributor's profile.
   student proved they own via Supabase Auth (the sign-up code, or a code sent
   from **Settings**; the emailed link also works). Clients can never set
   `verified` or `university_id` (column permissions + a guard trigger).
-- **AI chat ("Ask about CS 1332")**: course-scoped retrieval over student
-  posts, then a short synthesis citing them. Chats are saved per student and
+- **Ask AI tab** (`/c/cs1332?tab=ask`): course-scoped retrieval over every
+  kind of student post (reviews, study threads with their replies, and
+  resources), plus the course's rating averages, then a short synthesis citing
+  the posts. Chats are saved per student and
   course (`ai_conversations`, `ai_messages`, private to their owner): follow-ups
   remember the last 3 turns, and students can reopen past chats, start a new
   one or delete one.

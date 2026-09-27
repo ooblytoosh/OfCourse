@@ -16,8 +16,14 @@ export const AI_LIMITS = {
   questionMin: 5,
   questionMax: 500,
   // Posts retrieved per question, and how many of them go to the model.
-  matchCount: 10,
+  // Retrieval keeps the best relevant post from each course tab (reviews,
+  // threads, resources) so one kind of post can't crowd out the others.
+  matchCount: 20,
   maxSources: 8,
+  // Student replies included under each source (threads keep their answers
+  // in the replies), and how much of each reply.
+  repliesPerSource: 4,
+  replyChars: 400,
   // Characters of each post sent to the model (keeps prompts small).
   sourceChars: 1500,
   // Earlier chat turns sent with a follow-up question, and how much of each

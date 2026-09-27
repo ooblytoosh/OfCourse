@@ -59,17 +59,17 @@
   color-scheme: light;
   /* Brand: polished gold. --brand is the main tone; the gold-* stops make the
      metallic gradient (deep → bright → shine → bright → deep). */
-  --brand: oklch(0.68 0.14 78);
+  --brand: oklch(0.6 0.085 78);
   --brand-foreground: oklch(0.22 0.04 70);
-  --brand-2: oklch(0.8 0.15 88);
-  --brand-3: oklch(0.55 0.12 65);
-  --gold-deep: oklch(0.6 0.13 68);
-  --gold: oklch(0.76 0.15 83);
-  --gold-shine: oklch(0.93 0.09 95);
+  --brand-2: oklch(0.72 0.09 86);
+  --brand-3: oklch(0.5 0.075 65);
+  --gold-deep: oklch(0.56 0.075 70);
+  --gold: oklch(0.69 0.095 82);
+  --gold-shine: oklch(0.83 0.07 92);
   /* Gold text needs deeper stops on a light page to stay readable. */
-  --gold-text-deep: oklch(0.48 0.11 62);
-  --gold-text: oklch(0.6 0.14 74);
-  --gold-text-shine: oklch(0.72 0.16 86);
+  --gold-text-deep: oklch(0.45 0.065 62);
+  --gold-text: oklch(0.55 0.085 74);
+  --gold-text-shine: oklch(0.66 0.095 84);
   /* Stat colors: good / middling / heavy */
   --good: oklch(0.58 0.15 152);
   --warn: oklch(0.68 0.15 70);
@@ -80,22 +80,22 @@
   --card-foreground: oklch(0.2 0.015 70);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.2 0.015 70);
-  --primary: oklch(0.76 0.15 82);
+  --primary: oklch(0.69 0.095 82);
   --primary-foreground: oklch(0.22 0.04 70);
   --secondary: oklch(0.96 0.01 90);
   --secondary-foreground: oklch(0.25 0.02 70);
   --muted: oklch(0.962 0.008 90);
   --muted-foreground: oklch(0.5 0.02 75);
-  --accent: oklch(0.95 0.04 90);
+  --accent: oklch(0.95 0.025 88);
   --accent-foreground: oklch(0.35 0.08 70);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.905 0.015 90);
   --input: oklch(0.885 0.02 90);
-  --ring: oklch(0.7 0.14 80 / 60%);
+  --ring: oklch(0.6 0.085 78 / 55%);
   --surface-shadow: 0 1px 2px 0 oklch(0.3 0.03 70 / 0.05);
-  --surface-hover-shadow: 0 10px 30px -14px oklch(0.6 0.14 78 / 0.4);
-  --glow-1: oklch(0.8 0.15 88 / 16%);
-  --glow-2: oklch(0.75 0.14 70 / 10%);
+  --surface-hover-shadow: 0 10px 30px -14px oklch(0.55 0.08 78 / 0.35);
+  --glow-1: oklch(0.8 0.09 88 / 14%);
+  --glow-2: oklch(0.75 0.08 70 / 8%);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -104,27 +104,27 @@
   --radius: 0.7rem;
   --sidebar: oklch(0.985 0.005 90);
   --sidebar-foreground: oklch(0.2 0.015 70);
-  --sidebar-primary: oklch(0.76 0.15 82);
+  --sidebar-primary: oklch(0.69 0.095 82);
   --sidebar-primary-foreground: oklch(0.22 0.04 70);
-  --sidebar-accent: oklch(0.95 0.04 90);
+  --sidebar-accent: oklch(0.95 0.025 88);
   --sidebar-accent-foreground: oklch(0.35 0.08 70);
   --sidebar-border: oklch(0.905 0.015 90);
-  --sidebar-ring: oklch(0.7 0.14 80 / 60%);
+  --sidebar-ring: oklch(0.6 0.085 78 / 55%);
 }
 
 /* Default theme: warm near-black with gold that catches the light. */
 .dark {
   color-scheme: dark;
-  --brand: oklch(0.83 0.14 85);
+  --brand: oklch(0.76 0.085 82);
   --brand-foreground: oklch(0.2 0.03 70);
-  --brand-2: oklch(0.92 0.1 95);
-  --brand-3: oklch(0.7 0.13 72);
-  --gold-deep: oklch(0.66 0.13 70);
-  --gold: oklch(0.82 0.15 85);
-  --gold-shine: oklch(0.96 0.07 97);
-  --gold-text-deep: oklch(0.7 0.13 72);
-  --gold-text: oklch(0.83 0.15 85);
-  --gold-text-shine: oklch(0.95 0.08 96);
+  --brand-2: oklch(0.85 0.065 90);
+  --brand-3: oklch(0.64 0.075 72);
+  --gold-deep: oklch(0.6 0.075 72);
+  --gold: oklch(0.74 0.09 82);
+  --gold-shine: oklch(0.86 0.06 92);
+  --gold-text-deep: oklch(0.64 0.075 72);
+  --gold-text: oklch(0.76 0.085 82);
+  --gold-text-shine: oklch(0.88 0.055 92);
   --good: oklch(0.77 0.16 152);
   --warn: oklch(0.84 0.15 85);
   --bad: oklch(0.72 0.18 35);
@@ -134,22 +134,22 @@
   --card-foreground: oklch(0.96 0.006 90);
   --popover: oklch(0.215 0.01 80);
   --popover-foreground: oklch(0.96 0.006 90);
-  --primary: oklch(0.82 0.15 85);
+  --primary: oklch(0.74 0.09 82);
   --primary-foreground: oklch(0.2 0.03 70);
   --secondary: oklch(0.245 0.01 80);
   --secondary-foreground: oklch(0.96 0.006 90);
   --muted: oklch(0.24 0.01 80);
   --muted-foreground: oklch(0.7 0.015 85);
-  --accent: oklch(0.27 0.035 85);
+  --accent: oklch(0.26 0.02 85);
   --accent-foreground: oklch(0.96 0.006 90);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(0.9 0.05 88 / 10%);
   --input: oklch(0.9 0.05 88 / 15%);
-  --ring: oklch(0.83 0.14 85 / 55%);
+  --ring: oklch(0.76 0.085 82 / 50%);
   --surface-shadow: none;
-  --surface-hover-shadow: 0 10px 30px -14px oklch(0.8 0.15 85 / 0.35);
-  --glow-1: oklch(0.8 0.15 85 / 11%);
-  --glow-2: oklch(0.75 0.14 65 / 7%);
+  --surface-hover-shadow: 0 10px 30px -14px oklch(0.74 0.09 82 / 0.28);
+  --glow-1: oklch(0.78 0.09 85 / 9%);
+  --glow-2: oklch(0.72 0.08 65 / 5%);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -157,12 +157,12 @@
   --chart-5: oklch(0.269 0 0);
   --sidebar: oklch(0.17 0.007 80);
   --sidebar-foreground: oklch(0.96 0.006 90);
-  --sidebar-primary: oklch(0.82 0.15 85);
+  --sidebar-primary: oklch(0.74 0.09 82);
   --sidebar-primary-foreground: oklch(0.2 0.03 70);
-  --sidebar-accent: oklch(0.27 0.035 85);
+  --sidebar-accent: oklch(0.26 0.02 85);
   --sidebar-accent-foreground: oklch(0.96 0.006 90);
   --sidebar-border: oklch(0.9 0.05 88 / 10%);
-  --sidebar-ring: oklch(0.83 0.14 85 / 55%);
+  --sidebar-ring: oklch(0.76 0.085 82 / 50%);
 }
 
 @layer base {
@@ -229,7 +229,7 @@
   transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease !important;
 }
 
-/* Metallic gold helpers */
+/* Brushed gold helpers (muted, lamp-lit) */
 @utility bg-brand-gradient {
   background-image: linear-gradient(
     125deg,
@@ -269,9 +269,9 @@
     inset: 0;
     z-index: 1;
     pointer-events: none;
-    background: linear-gradient(110deg, transparent 35%, oklch(1 0 0 / 55%) 50%, transparent 65%);
+    background: linear-gradient(110deg, transparent 38%, oklch(1 0.02 90 / 30%) 50%, transparent 62%);
     transform: translateX(-120%);
-    transition: transform 700ms cubic-bezier(0.2, 0, 0, 1);
+    transition: transform 900ms cubic-bezier(0.2, 0, 0, 1);
   }
   &:hover::after {
     transform: translateX(120%);

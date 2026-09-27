@@ -3,7 +3,8 @@ import "server-only";
 import { AI_LIMITS } from "@/lib/ai/config";
 import { countUnindexedPosts, embedTexts, syncPostEmbeddings } from "@/lib/ai/embeddings";
 import { getOpenAI } from "@/lib/ai/openai";
-import { sanitizeAnswer, synthesize, type ChatTurn } from "@/lib/ai/synthesis";
+import { sanitizeAnswer, synthesize, type ChatTurn, type SourceReply } from "@/lib/ai/synthesis";
+import { tabForPostType } from "@/lib/content-policy";
 import type { Json } from "@/lib/database.types";
 import { getPostsByIds, type PostSummary } from "@/lib/data/posts";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -112,10 +113,13 @@ export async function askStudentKnowledge(input: {
     if (matchError) throw new Error(`Vector search failed: ${matchError.message}`);
 
     const similarity = new Map(matches.map((m) => [m.post_id, m.similarity]));
-    const relevantIds = matches
-      .filter((m) => m.similarity >= AI_LIMITS.minSimilarity)
-      .slice(0, AI_LIMITS.maxSources)
-      .map((m) => m.post_id);
+    const candidates = matches.filter((m) => m.similarity >= AI_LIMITS.minSimilarity);
+    // Loaded through the normal API: only posts this student is allowed to see.
+    const candidatePosts = candidates.length
+      ? await getPostsByIds(candidates.map((m) => m.post_id), input.userId)
+      : [];
+    const posts = pickAcrossTabs(candidatePosts, AI_LIMITS.maxSources);
+    const relevantIds = posts.map((p) => p.id);
 
     await supabase.from("ai_search_log").insert({
       user_id: input.userId,
@@ -131,13 +135,15 @@ export async function askStudentKnowledge(input: {
     });
 
     let result: AskResult;
-    // Loaded through the normal API: only posts this student is allowed to see.
-    const posts = relevantIds.length ? await getPostsByIds(relevantIds, input.userId) : [];
     if (posts.length === 0) {
       const closest = await getPostsByIds(matches.slice(0, 3).map((m) => m.post_id), input.userId);
       result = { status: "no_results", question, closest: closest.map((p) => toSource(p)) };
     } else {
-      const raw = await synthesize(openai, question, posts, history);
+      const [replies, ratings] = await Promise.all([
+        loadReplies(supabase, relevantIds),
+        loadRatings(supabase, course.id),
+      ]);
+      const raw = await synthesize(openai, question, posts, history, { replies, ratings });
       if (!raw) throw new Error("The model returned an empty answer.");
       const { answer, cited } = sanitizeAnswer(raw, posts.length);
       result = {
@@ -163,6 +169,69 @@ export async function askStudentKnowledge(input: {
 }
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
+
+// Posts come in most-similar first. Keep the best one from each course tab
+// (reviews, threads, resources) so a question can draw on all of them, then
+// fill the rest by similarity, and return them most-similar first.
+function pickAcrossTabs<T extends PostSummary>(posts: T[], max: number): T[] {
+  const picked = new Set<T>();
+  const seenTabs = new Set<string>();
+  for (const post of posts) {
+    const tab = tabForPostType(post.type);
+    if (!seenTabs.has(tab) && picked.size < max) {
+      seenTabs.add(tab);
+      picked.add(post);
+    }
+  }
+  for (const post of posts) {
+    if (picked.size >= max) break;
+    picked.add(post);
+  }
+  return posts.filter((p) => picked.has(p));
+}
+
+// The first few student replies under each source post. Threads are often a
+// question whose answers live in the replies.
+async function loadReplies(supabase: Supabase, postIds: string[]): Promise<Map<string, SourceReply[]>> {
+  const replies = new Map<string, SourceReply[]>();
+  if (postIds.length === 0) return replies;
+  const { data } = await supabase
+    .from("comments")
+    .select("post_id, content, deleted_at, author:profiles(name, username)")
+    .in("post_id", postIds)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: true })
+    .overrideTypes<
+      { post_id: string; content: string; author: { name: string | null; username: string | null } | null }[],
+      { merge: false }
+    >();
+  for (const row of data ?? []) {
+    const list = replies.get(row.post_id) ?? [];
+    if (list.length >= AI_LIMITS.repliesPerSource) continue;
+    const text = row.content.replace(/\s+/g, " ").trim();
+    list.push({
+      author: row.author?.name || row.author?.username || "a student",
+      text: text.length > AI_LIMITS.replyChars ? `${text.slice(0, AI_LIMITS.replyChars)}…` : text,
+    });
+    replies.set(row.post_id, list);
+  }
+  return replies;
+}
+
+async function loadRatings(supabase: Supabase, courseId: string) {
+  const { data } = await supabase
+    .from("course_rating_stats")
+    .select("avg_workload_hours, avg_difficulty, would_take_again_pct, rating_count")
+    .eq("course_id", courseId)
+    .maybeSingle();
+  if (!data || !data.rating_count) return null;
+  return {
+    workloadHours: Number(data.avg_workload_hours),
+    difficulty: Number(data.avg_difficulty),
+    wouldTakeAgainPct: Number(data.would_take_again_pct),
+    count: Number(data.rating_count),
+  };
+}
 
 // The last few question/answer pairs of a chat, oldest first.
 async function loadHistory(supabase: Supabase, conversationId: string): Promise<ChatTurn[]> {
