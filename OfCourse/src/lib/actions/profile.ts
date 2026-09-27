@@ -168,6 +168,8 @@ const AVATAR_TYPES: Record<string, string> = {
   "image/webp": "webp",
   "image/gif": "gif",
 };
+// Photos are resized in the browser first, so uploads are small; this is the
+// storage bucket's limit.
 const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
 const AVATAR_BUCKET = "avatars";
 
@@ -184,7 +186,7 @@ export async function uploadAvatar(_prev: AvatarState, formData: FormData): Prom
   if (!(file instanceof File) || file.size === 0) return fail("Choose an image.");
   const ext = AVATAR_TYPES[file.type];
   if (!ext) return fail("Use a PNG, JPG, WebP or GIF image.");
-  if (file.size > AVATAR_MAX_BYTES) return fail("Images can be at most 2 MB.");
+  if (file.size > AVATAR_MAX_BYTES) return fail("That image is still too large after resizing. Try a different photo.");
 
   const supabase = await createClient();
   const path = `${user.id}/${Date.now()}.${ext}`;
