@@ -31,7 +31,7 @@ export function NavLinks({ orientation }: { orientation: "vertical" | "horizonta
             className={cn(
               "flex items-center rounded-xl text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-card hover:text-foreground",
               orientation === "vertical" ? "gap-3 px-3 py-2" : "justify-center gap-1.5 px-1 py-2",
-              active && "bg-card text-foreground shadow-sm ring-1 ring-border",
+              active && "bg-accent text-accent-foreground ring-1 ring-brand/20 [&>svg]:text-brand",
             )}
           >
             <Icon className={cn("size-4 shrink-0", orientation === "horizontal" && "max-[379px]:hidden")} />

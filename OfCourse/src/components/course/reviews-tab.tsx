@@ -6,7 +6,6 @@ import { EmptyState } from "@/components/empty-state";
 import { PostCard } from "@/components/post/post-card";
 import type { CourseDetail } from "@/lib/data/courses";
 import type { PostSummary } from "@/lib/data/posts";
-import { formatCount } from "@/lib/format";
 
 // "Course Reviews & Stats": your rating, then written reviews from students.
 export function ReviewsTab({
@@ -25,9 +24,7 @@ export function ReviewsTab({
       <section id="rate" className="surface scroll-mt-20 p-5">
         <h3 className="font-semibold">Rate this course</h3>
         <p className="mt-1 text-sm text-muted-foreground">
-          {course.stats
-            ? `The stats above average ${formatCount(course.stats.ratingCount, "student rating")}. `
-            : "Nobody has rated this course yet. "}
+          {!course.stats && "Nobody has rated this course yet. "}
           Took {course.code}? Add your workload, difficulty and whether you&apos;d take it again. Only
           the averages are shown.
         </p>

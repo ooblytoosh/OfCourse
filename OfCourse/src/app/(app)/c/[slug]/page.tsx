@@ -5,7 +5,6 @@ import { notFound } from "next/navigation";
 
 import { CourseChat } from "@/components/ai/course-chat";
 import { CourseHeader } from "@/components/course/course-header";
-import { CourseStats } from "@/components/course/course-stats";
 import { CourseTabs } from "@/components/course/course-tabs";
 import { FeedControls, feedHref } from "@/components/course/feed-controls";
 import { ResourcesByUnit } from "@/components/course/resources-by-unit";
@@ -126,8 +125,6 @@ export default async function CoursePage({
 
       <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_16rem]">
         <div className="flex min-w-0 flex-col gap-6">
-          <CourseStats course={course} />
-
           <CourseChat
             key={course.id}
             courseId={course.id}
