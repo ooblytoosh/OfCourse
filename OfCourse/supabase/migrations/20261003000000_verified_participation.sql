@@ -42,18 +42,21 @@ grant execute on function public.post_course_id(uuid) to authenticated;
 
 -- Joining
 drop policy if exists "Users join courses" on public.course_members;
+drop policy if exists "Verified students join their university's courses" on public.course_members;
 create policy "Verified students join their university's courses" on public.course_members
   for insert to authenticated
   with check ((select auth.uid()) = user_id and public.can_participate(course_id));
 
 -- Posting
 drop policy if exists "Users create own posts" on public.posts;
+drop policy if exists "Verified students post in their university's courses" on public.posts;
 create policy "Verified students post in their university's courses" on public.posts
   for insert to authenticated
   with check ((select auth.uid()) = author_id and public.can_participate(course_id));
 
 -- Commenting
 drop policy if exists "Users create own comments" on public.comments;
+drop policy if exists "Verified students comment in their university's courses" on public.comments;
 create policy "Verified students comment in their university's courses" on public.comments
   for insert to authenticated
   with check (
@@ -63,6 +66,7 @@ create policy "Verified students comment in their university's courses" on publi
 
 -- Upvoting
 drop policy if exists "Users cast own votes" on public.votes;
+drop policy if exists "Verified students upvote in their university's courses" on public.votes;
 create policy "Verified students upvote in their university's courses" on public.votes
   for insert to authenticated
   with check (
@@ -72,10 +76,12 @@ create policy "Verified students upvote in their university's courses" on public
 
 -- Rating
 drop policy if exists "Students rate courses" on public.course_ratings;
+drop policy if exists "Verified students rate their university's courses" on public.course_ratings;
 create policy "Verified students rate their university's courses" on public.course_ratings
   for insert to authenticated
   with check ((select auth.uid()) = user_id and public.can_participate(course_id));
 drop policy if exists "Students update their ratings" on public.course_ratings;
+drop policy if exists "Verified students update their ratings" on public.course_ratings;
 create policy "Verified students update their ratings" on public.course_ratings
   for update to authenticated
   using ((select auth.uid()) = user_id)
@@ -83,10 +89,12 @@ create policy "Verified students update their ratings" on public.course_ratings
 
 -- AI chats and the AI question log
 drop policy if exists "Students start their own chats" on public.ai_conversations;
+drop policy if exists "Verified students start chats in their university's courses" on public.ai_conversations;
 create policy "Verified students start chats in their university's courses" on public.ai_conversations
   for insert to authenticated
   with check ((select auth.uid()) = user_id and public.can_participate(course_id));
 drop policy if exists "Students log their own questions" on public.ai_search_log;
+drop policy if exists "Verified students log their own questions" on public.ai_search_log;
 create policy "Verified students log their own questions" on public.ai_search_log
   for insert to authenticated
   with check ((select auth.uid()) = user_id and public.can_participate(course_id));
