@@ -28,7 +28,7 @@ export default async function VerifyPage({ searchParams }: PageProps<"/verify">)
         <h1 className="text-xl font-semibold">Check your email</h1>
         <p className="text-sm text-muted-foreground">
           We sent an email to{" "}
-          <span className="font-medium text-foreground">{address || "your university address"}</span>.
+          <span className="font-medium text-foreground">{address || "your university address"}</span>.{" "}
           {prefilled
             ? "Your code is filled in below. Press Verify to finish."
             : "Type the code from that email below, or click the link in it."}
