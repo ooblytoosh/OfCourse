@@ -13,6 +13,7 @@ export function CommentForm({
   parentId,
   signedIn,
   placeholder = "Add a comment",
+  defaultValue = "",
   autoFocus,
   onDone,
 }: {
@@ -20,6 +21,8 @@ export function CommentForm({
   parentId?: string;
   signedIn: boolean;
   placeholder?: string;
+  // Starting text, e.g. "@jordankim " when replying to a reply.
+  defaultValue?: string;
   autoFocus?: boolean;
   onDone?: () => void;
 }) {
@@ -58,6 +61,7 @@ export function CommentForm({
         maxLength={POST_LIMITS.commentMax}
         placeholder={placeholder}
         aria-label={placeholder}
+        defaultValue={defaultValue}
         autoFocus={autoFocus}
         className="min-h-20 bg-card"
       />

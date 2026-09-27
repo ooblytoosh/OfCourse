@@ -1,4 +1,4 @@
-import { BadgeCheck, PenLine } from "lucide-react";
+import { BadgeCheck, PenLine, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 import { ButtonLink } from "@/components/button-link";
@@ -63,6 +63,10 @@ export function CourseHeader({
             )}
           </div>
           <div className="flex shrink-0 gap-2">
+            <ButtonLink href={`/c/${course.slug}?tab=ask`} variant="outline" size="lg" className="px-3.5">
+              <Sparkles className="text-brand" />
+              Ask AI
+            </ButtonLink>
             <ButtonLink href={`/new?course=${course.slug}`} variant="outline" size="lg" className="px-3.5">
               <PenLine />
               Write a post

@@ -1,4 +1,4 @@
-import { Bookmark, Home, LibraryBig, UserRound, type LucideIcon } from "lucide-react";
+import { Bookmark, Compass, Home, UserRound, type LucideIcon } from "lucide-react";
 
 export const siteConfig = {
   name: "OfCourse",
@@ -11,7 +11,7 @@ export type NavItem = { href: string; label: string; icon: LucideIcon };
 
 export const mainNav: NavItem[] = [
   { href: "/", label: "Home", icon: Home },
-  { href: "/courses", label: "Courses", icon: LibraryBig },
+  { href: "/courses", label: "Explore", icon: Compass },
   { href: "/saved", label: "Saved", icon: Bookmark },
   { href: "/profile", label: "Profile", icon: UserRound },
 ];

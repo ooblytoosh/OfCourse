@@ -83,6 +83,9 @@ export default async function CoursePage({
     : undefined;
   const topic = activeTopic ? topicParam : null;
 
+  // "Ask AI" is its own tab; the other three are post feeds.
+  const asking = tabParam === "ask";
+
   const counts = Object.fromEntries(
     COURSE_TAB_ORDER.map((t) => [
       t,
@@ -94,7 +97,7 @@ export default async function CoursePage({
   ) as Record<CourseTab, number>;
 
   // Your saved chats in this course; the most recent one reopens.
-  const chats = user ? await listChats(course.id) : [];
+  const chats = user && asking ? await listChats(course.id) : [];
   const chatTurns =
     user && chats[0] ? await getChatTurns(chats[0].id, user.id) : [];
   const suggestions = [
@@ -102,15 +105,17 @@ export default async function CoursePage({
     ...topics.slice(0, 2).map((t) => `Can someone explain ${t.name}?`),
   ];
 
-  const posts = await getCourseFeed({
-    courseId: course.id,
-    types: COURSE_TABS[tab].types,
-    sort: tab === "threads" ? sort : "top",
-    topicId: activeTopic?.id,
-    query: q ?? undefined,
-    viewerId: user?.id,
-    limit: 100,
-  });
+  const posts = asking
+    ? []
+    : await getCourseFeed({
+        courseId: course.id,
+        types: COURSE_TABS[tab].types,
+        sort: tab === "threads" ? sort : "top",
+        topicId: activeTopic?.id,
+        query: q ?? undefined,
+        viewerId: user?.id,
+        limit: 100,
+      });
 
   const filterNote = (q || activeTopic) && (
     <p className="text-sm text-muted-foreground">
@@ -128,28 +133,40 @@ export default async function CoursePage({
 
   return (
     <div className="flex flex-col gap-8">
-      <CourseHeader course={course} signedIn={signedIn} participation={participation} />
-      {signedIn && !participation.allowed && <VerifyPrompt participation={participation} />}
+      <CourseHeader
+        course={course}
+        signedIn={signedIn}
+        participation={participation}
+      />
+      {signedIn && !participation.allowed && (
+        <VerifyPrompt participation={participation} />
+      )}
 
       <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_16rem]">
         <div className="flex min-w-0 flex-col gap-6">
-          <CourseChat
-            key={course.id}
-            courseId={course.id}
-            courseCode={course.code}
-            signedIn={signedIn}
-            suggestions={suggestions}
-            initialChats={chats}
-            initialChatId={chats[0]?.id ?? null}
-            initialTurns={chatTurns}
-            canAsk={participation.allowed}
-            blockedMessage={participation.allowed ? undefined : participation.message}
-          />
-
           <div className="flex min-w-0 flex-col gap-4">
-            <CourseTabs slug={course.slug} active={tab} counts={counts} />
+            <CourseTabs
+              slug={course.slug}
+              active={asking ? "ask" : tab}
+              counts={counts}
+            />
 
-            {tab === "reviews" ? (
+            {asking ? (
+              <CourseChat
+                key={course.id}
+                courseId={course.id}
+                courseCode={course.code}
+                signedIn={signedIn}
+                suggestions={suggestions}
+                initialChats={chats}
+                initialChatId={chats[0]?.id ?? null}
+                initialTurns={chatTurns}
+                canAsk={participation.allowed}
+                blockedMessage={
+                  participation.allowed ? undefined : participation.message
+                }
+              />
+            ) : tab === "reviews" ? (
               <ReviewsTab
                 course={course}
                 reviews={posts}
@@ -191,7 +208,12 @@ export default async function CoursePage({
                 ) : (
                   <div className="flex flex-col gap-3">
                     {posts.map((post) => (
-                      <PostCard key={post.id} post={post} signedIn={signedIn} canVote={participation.allowed} />
+                      <PostCard
+                        key={post.id}
+                        post={post}
+                        signedIn={signedIn}
+                        canVote={participation.allowed}
+                      />
                     ))}
                   </div>
                 )}
