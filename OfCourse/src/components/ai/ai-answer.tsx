@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowBigUp, Info, Sparkles } from "lucide-react";
+import { Info, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { Fragment, useState } from "react";
 
@@ -10,6 +10,7 @@ import { VerifiedBadge } from "@/components/verified-badge";
 import type { AskResult, AskSource } from "@/lib/ai/search";
 import { profileHref } from "@/lib/links";
 import { cn } from "@/lib/utils";
+import { BulbIcon } from "@/components/bulb/bulb-icon";
 
 const postHref = (s: AskSource) => `/c/${s.course.slug}/posts/${s.id}`;
 
@@ -97,9 +98,9 @@ export function SourceCard({ source, index }: { source: AskSource; index?: numbe
         <span>{source.course.code}</span>
         {source.semester && <span>· {source.semester}</span>}
         <span className="inline-flex items-center">
-          · <ArrowBigUp className="ml-0.5 size-3.5" aria-hidden />
-          {source.voteScore}
-          <span className="sr-only">upvotes</span>
+          · <BulbIcon level={source.bulb.level} size={12} className="mx-0.5" />
+          {source.bulb.lit}
+          <span className="sr-only">lit</span>
         </span>
       </div>
     </li>

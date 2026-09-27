@@ -46,7 +46,7 @@ export function VerifyPrompt({
           )}
           <span className={participation.reason === "verify" ? "text-muted-foreground" : ""}>
             {participation.reason === "verify"
-              ? "Until then you can read everything, but joining courses, posting, commenting, upvoting, rating and the AI need a verified student."
+              ? "Until then you can read everything, but joining courses, posting, commenting, voting, rating and the AI need a verified student."
               : participation.message}
           </span>
         </span>

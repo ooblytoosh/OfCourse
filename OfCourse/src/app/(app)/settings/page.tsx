@@ -88,6 +88,7 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
                 avatar_url: profile.avatarUrl,
                 verified: profile.verified,
                 university: null,
+                lumens: profile.lumens,
               }}
             />
             <div className="my-5 border-t" />

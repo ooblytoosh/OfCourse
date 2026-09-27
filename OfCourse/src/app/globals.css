@@ -287,3 +287,54 @@
 @utility animate-gold {
   animation: gold-drift 6s ease-in-out infinite;
 }
+
+/* Lightbulbs */
+@keyframes bulb-flash {
+  0% { opacity: 0.25; }
+  12% { opacity: 1; }
+  18% { opacity: 0.45; }
+  30% { opacity: 1; }
+  38% { opacity: 0.75; }
+  100% { opacity: 1; }
+}
+@keyframes bulb-bloom {
+  0% { transform: scale(0.85); }
+  45% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+@keyframes bulb-filament {
+  0%, 100% { stroke-width: 1.1; }
+  40% { stroke-width: 1.9; }
+}
+@keyframes bulb-dim {
+  0%, 100% { opacity: 1; }
+  47% { opacity: 1; }
+  50% { opacity: 0.55; }
+  53% { opacity: 1; }
+  78% { opacity: 0.8; }
+  80% { opacity: 1; }
+}
+@keyframes bulb-rays {
+  0%, 100% { opacity: 0.55; transform: scale(0.96); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+@keyframes bulb-shimmer {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.86; }
+}
+@keyframes bulb-crack {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes bulb-off {
+  0% { opacity: 1; }
+  30% { opacity: 0.35; }
+  100% { opacity: 1; }
+}
+.bulb-flash { animation: bulb-flash 0.9s ease-out both, bulb-bloom 0.6s cubic-bezier(0.2, 0, 0, 1.4) both; transform-origin: 12px 12px; }
+.bulb-filament { animation: bulb-filament 0.7s ease-in-out 0.15s 2; }
+.bulb-dim { animation: bulb-dim 3.2s linear infinite; }
+.bulb-rays { animation: bulb-rays 2.4s ease-in-out infinite; transform-origin: 12px 10.5px; }
+.bulb-shimmer { animation: bulb-shimmer 3s ease-in-out infinite; }
+.bulb-crack { stroke-dasharray: 1; animation: bulb-crack 0.6s ease-out both; }
+.bulb-click-off { animation: bulb-off 0.45s ease-out both; }

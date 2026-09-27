@@ -102,6 +102,12 @@ export type Database = {
         Update: Record<string, never>;
         Relationships: [];
       };
+      comment_votes: {
+        Row: { comment_id: string; user_id: string; value: number; created_at: string };
+        Insert: { comment_id: string; user_id: string; value: number };
+        Update: { value?: number };
+        Relationships: [];
+      };
       majors: {
         Row: {
           name: string
@@ -457,6 +463,7 @@ export type Database = {
       claim_university_verification: { Args: never; Returns: string | null };
       can_participate: { Args: { p_course_id: string }; Returns: boolean };
       post_course_id: { Args: { p_post_id: string }; Returns: string | null };
+      comment_course_id: { Args: { p_comment_id: string }; Returns: string | null };
       accept_terms: { Args: never; Returns: string | null };
       university_for_email: { Args: { email: string }; Returns: string | null };
       match_course_posts: {

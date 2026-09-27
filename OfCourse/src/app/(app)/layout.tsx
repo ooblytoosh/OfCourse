@@ -28,7 +28,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               <ShieldCheck className="size-4 shrink-0 text-brand" aria-hidden />
               <span>
                 <span className="font-medium">Verify your university email</span>
-                <span className="text-muted-foreground"> to join courses, post, comment, upvote and use the AI.</span>
+                <span className="text-muted-foreground"> to join courses, post, comment, vote with lightbulbs and use the AI.</span>
               </span>
             </p>
             <Link href={VERIFY_HREF} className="font-medium text-brand underline-offset-4 hover:underline">

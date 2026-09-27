@@ -1,10 +1,11 @@
-import { ArrowBigUp, BadgeAlert, Bookmark, LogOut, MessageSquare, PenLine } from "lucide-react";
+import { BadgeAlert, Bookmark, LogOut, MessageSquare, PenLine } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { signOut } from "@/app/(auth)/actions";
 import { ButtonLink } from "@/components/button-link";
+import { BulbIcon } from "@/components/bulb/bulb-icon";
 import { CourseCard } from "@/components/course/course-card";
 import { EmptyState } from "@/components/empty-state";
 import { PostCard } from "@/components/post/post-card";
@@ -14,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
 import { VerifiedBadge } from "@/components/verified-badge";
 import { getCurrentUser } from "@/lib/auth";
+import { BULB_LEVELS } from "@/lib/bulb";
 import { getProfile, getProfileActivity } from "@/lib/data/profiles";
 import { formatCount, preview, timeAgo } from "@/lib/format";
 
@@ -50,8 +52,8 @@ export default async function ProfilePage({ params }: PageProps<"/u/[handle]">) 
   const isSelf = viewer?.id === profile.id;
   const activity = await getProfileActivity(profile.id, viewer?.id);
   const featured = [...activity.posts]
-    .filter((p) => p.voteScore > 0)
-    .sort((a, b) => b.voteScore - a.voteScore)
+    .filter((p) => p.bulb.level >= 3)
+    .sort((a, b) => b.bulb.score - a.bulb.score)
     .slice(0, 3);
   const displayName = profile.name ?? profile.username ?? "Student";
   const academic = [profile.major, profile.university?.shortName].filter(Boolean).join(" · ");
@@ -60,7 +62,7 @@ export default async function ProfilePage({ params }: PageProps<"/u/[handle]">) 
     <div className="flex flex-col gap-8">
       <header className="surface flex flex-col gap-5 p-6 sm:flex-row sm:items-start">
         <UserAvatar
-          author={{ id: profile.id, name: displayName, username: profile.username, avatar_url: profile.avatarUrl, verified: profile.verified, university: null }}
+          author={{ id: profile.id, name: displayName, username: profile.username, avatar_url: profile.avatarUrl, verified: profile.verified, university: null, lumens: profile.lumens }}
           className="size-20 text-2xl [&_[data-slot=avatar-fallback]]:text-xl"
         />
         <div className="min-w-0 flex-1">
@@ -118,7 +120,7 @@ export default async function ProfilePage({ params }: PageProps<"/u/[handle]">) 
 
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat value={activity.posts.length + activity.commentCount} label="Contributions" />
-        <Stat value={activity.helpfulVotes} label="Upvotes received" />
+        <Stat value={profile.lumens} label="Lumens" />
         <Stat value={activity.commentCount} label="Comments" />
         {activity.savedCount !== null ? (
           <Stat value={activity.savedCount} label="Saved resources" href="/saved" />
@@ -143,8 +145,8 @@ export default async function ProfilePage({ params }: PageProps<"/u/[handle]">) 
                       <span className="line-clamp-3 font-medium leading-snug">{post.title}</span>
                       <span className="mt-auto flex items-center gap-3 text-sm whitespace-nowrap text-muted-foreground">
                         <span className="inline-flex items-center gap-1">
-                          <ArrowBigUp className="size-4" aria-hidden />
-                          {post.voteScore} upvotes
+                          <BulbIcon level={post.bulb.level} size={15} />
+                          {BULB_LEVELS[post.bulb.level]} · {post.bulb.lit} lit
                         </span>
                         <span>{post.course.code}</span>
                       </span>

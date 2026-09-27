@@ -1,4 +1,4 @@
-import { ArrowBigUp, Clock, Flame, Search } from "lucide-react";
+import { Clock, Lightbulb, Search } from "lucide-react";
 import Link from "next/link";
 
 import { TopicSelect } from "@/components/course/topic-select";
@@ -7,10 +7,9 @@ import type { Unit } from "@/lib/data/courses";
 import type { FeedSort } from "@/lib/data/posts";
 import { cn } from "@/lib/utils";
 
-const SORTS: { value: FeedSort; label: string; icon: typeof Flame }[] = [
-  { value: "hot", label: "Hot", icon: Flame },
-  { value: "new", label: "New", icon: Clock },
-  { value: "top", label: "Top", icon: ArrowBigUp },
+const SORTS: { value: FeedSort; label: string; icon: typeof Clock }[] = [
+  { value: "brightest", label: "Brightest", icon: Lightbulb },
+  { value: "new", label: "Newest", icon: Clock },
 ];
 
 export type FeedParams = { tab: CourseTab; sort?: FeedSort; topic?: string | null; q?: string | null };
@@ -18,7 +17,7 @@ export type FeedParams = { tab: CourseTab; sort?: FeedSort; topic?: string | nul
 // Builds a course page URL, keeping the other filters.
 export function feedHref(slug: string, params: FeedParams) {
   const search = new URLSearchParams({ tab: params.tab });
-  if (params.sort && params.sort !== "hot") search.set("sort", params.sort);
+  if (params.sort && params.sort !== "brightest") search.set("sort", params.sort);
   if (params.topic) search.set("topic", params.topic);
   if (params.q) search.set("q", params.q);
   return `/c/${slug}?${search}`;
@@ -73,7 +72,7 @@ export function FeedControls({
         <TopicSelect units={units} value={topic} baseHref={feedHref(slug, { tab, sort, q })} />
         <form action={`/c/${slug}`} role="search" className="relative">
           <input type="hidden" name="tab" value={tab} />
-          {sort !== "hot" && <input type="hidden" name="sort" value={sort} />}
+          {sort !== "brightest" && <input type="hidden" name="sort" value={sort} />}
           {topic && <input type="hidden" name="topic" value={topic} />}
           <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <label htmlFor="keyword-q" className="sr-only">

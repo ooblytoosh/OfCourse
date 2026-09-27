@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import { BulbVote } from "@/components/bulb/bulb-vote";
 import { CommentForm } from "@/components/post/comment-form";
 import { CommentThread } from "@/components/post/comment-thread";
 import { PostMeta } from "@/components/post/post-meta";
@@ -10,7 +11,6 @@ import { PostOwnerActions } from "@/components/post/post-owner-actions";
 import { PostTypeBadge } from "@/components/post/post-type-badge";
 import { SaveButton } from "@/components/post/save-button";
 import { TopicChip } from "@/components/post/topic-chip";
-import { UpvoteButton } from "@/components/post/upvote-button";
 import { VerifyPrompt } from "@/components/verify-prompt";
 import { getCurrentUser } from "@/lib/auth";
 import { getComments, getPost } from "@/lib/data/posts";
@@ -28,14 +28,16 @@ export async function generateMetadata({
   return { title: post ? `${post.title} · ${post.course.code}` : "Post not found" };
 }
 
-export default async function PostPage({ params }: PageProps<"/c/[slug]/posts/[postId]">) {
+export default async function PostPage({ params, searchParams }: PageProps<"/c/[slug]/posts/[postId]">) {
   const { slug, postId } = await params;
+  const { csort } = await searchParams;
+  const commentSort = csort === "new" ? "new" : "brightest";
   if (!UUID.test(postId)) notFound();
 
   const user = await getCurrentUser();
   const [post, comments, profile] = await Promise.all([
     getPost(postId, user?.id),
-    getComments(postId),
+    getComments(postId, { viewerId: user?.id, sort: commentSort }),
     user ? getProfile(user.id) : Promise.resolve(null),
   ]);
   if (!post) notFound();
@@ -80,11 +82,11 @@ export default async function PostPage({ params }: PageProps<"/c/[slug]/posts/[p
         <div className="mt-6 text-[0.95rem] leading-7 whitespace-pre-line">{post.content}</div>
 
         <div className="mt-6 flex flex-wrap items-center gap-1 border-t pt-4">
-          <UpvoteButton
-            postId={post.id}
-            voted={post.viewerFoundHelpful}
+          <BulbVote
+            kind="post"
+            id={post.id}
+            bulb={post.bulb}
             canVote={!signedIn || participation.allowed}
-            count={post.voteScore}
             signedIn={signedIn}
           />
           <span className="px-2.5 text-sm text-muted-foreground">
@@ -103,7 +105,28 @@ export default async function PostPage({ params }: PageProps<"/c/[slug]/posts/[p
       </article>
 
       <section id="comments" className="flex scroll-mt-20 flex-col gap-5">
-        <h2 className="text-lg font-semibold">Comments</h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold">Comments</h2>
+          {comments.length > 1 && (
+            <nav aria-label="Sort comments" className="flex rounded-lg bg-muted p-0.5 text-xs font-medium">
+              {(["brightest", "new"] as const).map((s) => (
+                <Link
+                  key={s}
+                  href={`?csort=${s}#comments`}
+                  scroll={false}
+                  aria-current={commentSort === s ? "page" : undefined}
+                  className={
+                    commentSort === s
+                      ? "rounded-md bg-card px-2.5 py-1 text-foreground shadow-sm"
+                      : "px-2.5 py-1 text-muted-foreground hover:text-foreground"
+                  }
+                >
+                  {s === "brightest" ? "Brightest" : "Newest"}
+                </Link>
+              ))}
+            </nav>
+          )}
+        </div>
         {signedIn && !participation.allowed ? (
           <VerifyPrompt participation={participation} compact />
         ) : (
