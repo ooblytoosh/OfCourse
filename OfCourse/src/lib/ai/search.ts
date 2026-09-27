@@ -118,7 +118,13 @@ export async function askStudentKnowledge(input: {
     const candidatePosts = candidates.length
       ? await getPostsByIds(candidates.map((m) => m.post_id), input.userId)
       : [];
-    const posts = pickAcrossTabs(candidatePosts, AI_LIMITS.maxSources);
+    // Brighter posts (more students found them helpful) rank higher.
+    const ranked = [...candidatePosts].sort(
+      (a, b) =>
+        (similarity.get(b.id) ?? 0) + b.bulb.level * AI_LIMITS.brightnessWeight -
+        ((similarity.get(a.id) ?? 0) + a.bulb.level * AI_LIMITS.brightnessWeight),
+    );
+    const posts = pickAcrossTabs(ranked, AI_LIMITS.maxSources);
     const relevantIds = posts.map((p) => p.id);
 
     await supabase.from("ai_search_log").insert({
@@ -197,7 +203,7 @@ async function loadReplies(supabase: Supabase, postIds: string[]): Promise<Map<s
   if (postIds.length === 0) return replies;
   const { data } = await supabase
     .from("comments")
-    .select("post_id, content, deleted_at, author:profiles(name, username)")
+    .select("post_id, content, deleted_at, author:profiles!comments_author_id_fkey(name, username)")
     .in("post_id", postIds)
     .is("deleted_at", null)
     .order("created_at", { ascending: true })

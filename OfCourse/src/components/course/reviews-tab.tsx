@@ -31,7 +31,8 @@ export function ReviewsTab({
         <p className="mt-1 text-sm text-muted-foreground">
           {!course.stats && "Nobody has rated this course yet. "}
           Took {course.code}? Add your workload, difficulty and whether
-          you&apos;d take it again. Only the averages are shown.
+          you&apos;d take it again. Only the averages are shown, unless you
+          include your rating in a review. Writing a review updates it too.
         </p>
         <div className="mt-4">
           {signedIn && !canRate ? (

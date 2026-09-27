@@ -23,6 +23,9 @@ export const AI_LIMITS = {
   // Student replies included under each source (threads keep their answers
   // in the replies), and how much of each reply.
   repliesPerSource: 4,
+  // How much each brightness level (0-5) adds to a post's similarity when
+  // choosing sources, so brighter posts win close calls.
+  brightnessWeight: 0.015,
   replyChars: 400,
   // Characters of each post sent to the model (keeps prompts small).
   sourceChars: 1500,

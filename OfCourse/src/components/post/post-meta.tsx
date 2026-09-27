@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { LumensBadge } from "@/components/bulb/lumens-badge";
 import { authorName, UserAvatar } from "@/components/user-avatar";
 import { VerifiedBadge } from "@/components/verified-badge";
 import type { Author } from "@/lib/data/posts";
@@ -29,6 +30,9 @@ export function PostMeta({
           <UserAvatar author={author} className="size-6" />
           {authorName(author)}
         </Link>
+      ) : null}
+      {author ? (
+        <LumensBadge lumens={author.lumens} />
       ) : (
         <span className="inline-flex items-center gap-1.5 font-medium text-foreground">
           <UserAvatar author={null} className="size-6" />

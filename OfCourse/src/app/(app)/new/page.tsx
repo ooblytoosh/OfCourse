@@ -6,7 +6,7 @@ import { PostComposer } from "@/components/post/post-composer";
 import { VerifyPrompt } from "@/components/verify-prompt";
 import { requireUser } from "@/lib/auth";
 import { isPostableType, POST_TYPES, POSTABLE_TYPES, PROHIBITED_CONTENT } from "@/lib/content-policy";
-import { getCoursesWithTopics } from "@/lib/data/courses";
+import { getCoursesWithTopics, getViewerRatings } from "@/lib/data/courses";
 import { getProfile } from "@/lib/data/profiles";
 import { semesterOptions } from "@/lib/semesters";
 
@@ -36,7 +36,10 @@ export default async function NewPostPage({ searchParams }: PageProps<"/new">) {
     );
   }
 
-  const courses = await getCoursesWithTopics(profile.university.id);
+  const [courses, ratings] = await Promise.all([
+    getCoursesWithTopics(profile.university.id),
+    getViewerRatings(user.id),
+  ]);
   const initialCourse = courses.find((c) => c.slug === courseSlug);
 
   return (
@@ -49,6 +52,7 @@ export default async function NewPostPage({ searchParams }: PageProps<"/new">) {
         <PostComposer
           courses={courses}
           semesters={semesterOptions()}
+          ratings={ratings}
           initialCourseId={initialCourse?.id}
           initialType={typeof type === "string" && isPostableType(type) ? type : undefined}
         />

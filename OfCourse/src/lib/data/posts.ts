@@ -9,6 +9,8 @@ export type Author = {
   verified: boolean;
   // Short name of the verified university, e.g. "Georgia Tech".
   university: string | null;
+  // ON votes received (minus half the OFF votes), never below 0.
+  lumens: number;
 };
 
 type AuthorRow = Omit<Author, "university"> & {
@@ -16,7 +18,7 @@ type AuthorRow = Omit<Author, "university"> & {
 };
 
 const AUTHOR_FIELDS =
-  "id, name, username, avatar_url, verified, university:universities(name, short_name)";
+  "id, name, username, avatar_url, verified, lumens, university:universities(name, short_name)";
 
 export function toAuthor(row: AuthorRow | null): Author | null {
   if (!row) return null;
@@ -26,30 +28,40 @@ export function toAuthor(row: AuthorRow | null): Author | null {
   };
 }
 
+// A post's or comment's lightbulb: ON/OFF votes, brightness level (0 = unlit,
+// 1 = cracked ... 5 = radiant) and the viewer's own vote.
+export type Bulb = { lit: number; off: number; level: number; score: number; viewerVote: -1 | 0 | 1 };
+
+// A course review's numbers: hours per week, difficulty (1-10), take again?
+export type ReviewRating = { workloadHours: number; difficulty: number; wouldTakeAgain: boolean };
+
 export type PostSummary = {
   id: string;
   title: string;
   content: string;
   type: PostType;
   semester: string | null;
+  // Set on course reviews that include a rating.
+  review: ReviewRating | null;
   createdAt: string;
   // Set when the author edited the post after publishing it.
   editedAt: string | null;
+  // ON votes minus OFF votes.
   voteScore: number;
+  bulb: Bulb;
   commentCount: number;
   author: Author | null;
   course: { slug: string; code: string; name: string };
   topics: { id: string; name: string }[];
-  // Whether the viewer marked this post helpful.
-  viewerFoundHelpful: boolean;
   viewerHasSaved: boolean;
 };
 
-export type FeedSort = "hot" | "new" | "top";
-export const FEED_SORTS: FeedSort[] = ["hot", "new", "top"];
+export type FeedSort = "brightest" | "new";
+export const FEED_SORTS: FeedSort[] = ["brightest", "new"];
 
 const POST_SELECT =
-  "id, title, content, type, semester, created_at, updated_at, vote_score, comment_count, " +
+  "id, title, content, type, semester, review_workload_hours, review_difficulty, review_would_take_again, created_at, updated_at, vote_score, comment_count, " +
+  "lit_count, off_count, brightness_level, brightness_score, " +
   `author:profiles!posts_author_id_fkey(${AUTHOR_FIELDS}), course:courses(slug, code, name), topics(id, name)`;
 
 type PostRow = {
@@ -58,28 +70,35 @@ type PostRow = {
   content: string;
   type: PostType;
   semester: string | null;
+  review_workload_hours: number | null;
+  review_difficulty: number | null;
+  review_would_take_again: boolean | null;
   created_at: string;
   updated_at: string;
   vote_score: number;
   comment_count: number;
+  lit_count: number;
+  off_count: number;
+  brightness_level: number;
+  brightness_score: number;
   author: AuthorRow | null;
   course: { slug: string; code: string; name: string };
   topics: { id: string; name: string }[];
 };
 
-// Adds whether the viewer has upvoted/saved each post.
+// Adds the viewer's own vote and whether they saved each post.
 async function withViewerState(rows: PostRow[], viewerId?: string): Promise<PostSummary[]> {
   const ids = rows.map((r) => r.id);
-  let helpful = new Set<string>();
+  let votes = new Map<string, -1 | 1>();
   let saved = new Set<string>();
 
   if (viewerId && ids.length > 0) {
     const supabase = await createClient();
     const [voteRows, bookmarks] = await Promise.all([
-      supabase.from("votes").select("post_id").eq("user_id", viewerId).in("post_id", ids),
+      supabase.from("votes").select("post_id, value").eq("user_id", viewerId).in("post_id", ids),
       supabase.from("bookmarks").select("post_id").eq("user_id", viewerId).in("post_id", ids),
     ]);
-    helpful = new Set((voteRows.data ?? []).map((v) => v.post_id));
+    votes = new Map((voteRows.data ?? []).map((v) => [v.post_id, v.value === -1 ? -1 : 1]));
     saved = new Set((bookmarks.data ?? []).map((b) => b.post_id));
   }
 
@@ -89,14 +108,24 @@ async function withViewerState(rows: PostRow[], viewerId?: string): Promise<Post
     content: r.content,
     type: r.type,
     semester: r.semester,
+    review:
+      r.review_workload_hours !== null && r.review_difficulty !== null && r.review_would_take_again !== null
+        ? { workloadHours: r.review_workload_hours, difficulty: r.review_difficulty, wouldTakeAgain: r.review_would_take_again }
+        : null,
     createdAt: r.created_at,
     editedAt: wasEdited(r.created_at, r.updated_at) ? r.updated_at : null,
     voteScore: r.vote_score,
+    bulb: {
+      lit: r.lit_count,
+      off: r.off_count,
+      level: r.brightness_level,
+      score: r.brightness_score,
+      viewerVote: votes.get(r.id) ?? 0,
+    },
     commentCount: r.comment_count,
     author: toAuthor(r.author),
     course: r.course,
     topics: [...r.topics].sort((a, b) => a.name.localeCompare(b.name)),
-    viewerFoundHelpful: helpful.has(r.id),
     viewerHasSaved: saved.has(r.id),
   }));
 }
@@ -133,7 +162,7 @@ export async function getCourseFeed(options: {
   if (q) request = request.or(`title.ilike.%${q}%,content.ilike.%${q}%`);
 
   const orderColumn =
-    options.sort === "new" ? "created_at" : options.sort === "top" ? "vote_score" : "hot_score";
+    options.sort === "new" ? "created_at" : "brightness_score";
   request = request
     .order(orderColumn, { ascending: false })
     .order("created_at", { ascending: false })
@@ -209,16 +238,23 @@ export type CommentNode = {
   // Deleted comments that still have replies stay as placeholders.
   deleted: boolean;
   author: Author | null;
+  bulb: Bulb;
   replies: CommentNode[];
 };
 
+export type CommentSort = "brightest" | "new";
+
 // Comments for a post as a two-level tree: top-level comments with replies.
-export async function getComments(postId: string): Promise<CommentNode[]> {
+// Top-level comments are brightest first (or newest); replies stay in order.
+export async function getComments(
+  postId: string,
+  options: { viewerId?: string; sort?: CommentSort } = {},
+): Promise<CommentNode[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("comments")
     .select(
-      `id, content, created_at, updated_at, deleted_at, parent_comment_id, author:profiles(${AUTHOR_FIELDS})`,
+      `id, content, created_at, updated_at, deleted_at, parent_comment_id, lit_count, off_count, brightness_level, brightness_score, author:profiles!comments_author_id_fkey(${AUTHOR_FIELDS})`,
     )
     .eq("post_id", postId)
     .order("created_at", { ascending: true })
@@ -230,13 +266,28 @@ export async function getComments(postId: string): Promise<CommentNode[]> {
         updated_at: string;
         deleted_at: string | null;
         parent_comment_id: string | null;
+        lit_count: number;
+        off_count: number;
+        brightness_level: number;
+        brightness_score: number;
         author: AuthorRow | null;
       }[]
     , { merge: false }>();
   if (error) throw new Error(`Could not load comments: ${error.message}`);
 
+  let myVotes = new Map<string, -1 | 1>();
+  if (options.viewerId && data.length) {
+    const { data: votes } = await supabase
+      .from("comment_votes")
+      .select("comment_id, value")
+      .eq("user_id", options.viewerId)
+      .in("comment_id", data.map((c) => c.id));
+    myVotes = new Map((votes ?? []).map((v) => [v.comment_id, v.value === -1 ? -1 : 1]));
+  }
+
   const byId = new Map<string, CommentNode>();
   const roots: CommentNode[] = [];
+  const score = new Map(data.map((c) => [c.id, c.brightness_score]));
   for (const c of data) {
     const deleted = c.deleted_at !== null;
     byId.set(c.id, {
@@ -246,6 +297,13 @@ export async function getComments(postId: string): Promise<CommentNode[]> {
       edited: !deleted && wasEdited(c.created_at, c.updated_at),
       deleted,
       author: deleted ? null : toAuthor(c.author),
+      bulb: {
+        lit: c.lit_count,
+        off: c.off_count,
+        level: c.brightness_level,
+        score: c.brightness_score,
+        viewerVote: myVotes.get(c.id) ?? 0,
+      },
       replies: [],
     });
   }
@@ -255,7 +313,8 @@ export async function getComments(postId: string): Promise<CommentNode[]> {
     if (parent) parent.replies.push(node);
     else roots.push(node);
   }
-  return roots;
+  if (options.sort === "new") return roots.reverse();
+  return roots.sort((a, b) => (score.get(b.id) ?? 0) - (score.get(a.id) ?? 0));
 }
 
 // A student's posts, newest first.
@@ -296,4 +355,21 @@ export async function getPostTypeCounts(courseId: string): Promise<Partial<Recor
   const counts: Partial<Record<PostType, number>> = {};
   for (const { type } of data) counts[type] = (counts[type] ?? 0) + 1;
   return counts;
+}
+
+// The course's brightest review (at least "Glowing"), for the spotlight card.
+export async function getBrightestReview(courseId: string, viewerId?: string): Promise<PostSummary | null> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("posts")
+    .select(POST_SELECT)
+    .eq("course_id", courseId)
+    .eq("type", "experience")
+    .gte("brightness_level", 3)
+    .order("brightness_score", { ascending: false })
+    .limit(1)
+    .overrideTypes<PostRow[], { merge: false }>();
+  if (!data?.length) return null;
+  const [post] = await withViewerState(data, viewerId);
+  return post;
 }

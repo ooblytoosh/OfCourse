@@ -9,7 +9,7 @@ import type { PostSummary } from "@/lib/data/posts";
 
 type SourcePost = Pick<
   PostSummary,
-  "id" | "title" | "content" | "type" | "semester" | "topics" | "voteScore" | "author"
+  "id" | "title" | "content" | "type" | "semester" | "topics" | "bulb" | "author"
 >;
 
 export type SourceReply = { author: string; text: string };
@@ -47,7 +47,7 @@ function formatSource(post: SourcePost, label: string, replies: SourceReply[] = 
     `by ${author}`,
     post.semester ? `took the course ${post.semester}` : null,
     post.topics.length ? `topics: ${post.topics.map((t) => t.name).join(", ")}` : null,
-    `${post.voteScore} votes`,
+    `${post.bulb.lit} students found it helpful`,
   ]
     .filter(Boolean)
     .join(" · ");

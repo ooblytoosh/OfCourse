@@ -14,6 +14,8 @@ export type Profile = {
   verified: boolean;
   university: { id: string; name: string; shortName: string; domain: string } | null;
   termsAcceptedAt: string | null;
+  // ON votes received (minus half the OFF votes), never below 0.
+  lumens: number;
   createdAt: string;
 };
 
@@ -27,12 +29,13 @@ type ProfileRow = {
   bio: string | null;
   verified: boolean;
   terms_accepted_at: string | null;
+  lumens: number;
   created_at: string;
   university: { id: string; name: string; short_name: string | null; domain: string } | null;
 };
 
 const PROFILE_SELECT =
-  "id, name, username, avatar_url, major, grad_year, bio, verified, terms_accepted_at, created_at, " +
+  "id, name, username, avatar_url, major, grad_year, bio, verified, terms_accepted_at, lumens, created_at, " +
   "university:universities(id, name, short_name, domain)";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -58,6 +61,7 @@ function toProfile(row: ProfileRow): Profile {
           }
         : null,
     termsAcceptedAt: row.terms_accepted_at,
+    lumens: row.lumens ?? 0,
     createdAt: row.created_at,
   };
 }
@@ -93,7 +97,6 @@ export type ProfileActivity = {
   posts: PostSummary[];
   comments: ProfileComment[];
   commentCount: number;
-  helpfulVotes: number;
   courses: ProfileCourse[];
   savedCount: number | null;
 };
@@ -178,7 +181,6 @@ export async function getProfileActivity(
     posts,
     comments: profileComments.slice(0, 10),
     commentCount: commentCount.count ?? 0,
-    helpfulVotes: posts.reduce((sum, p) => sum + p.voteScore, 0),
     courses: [...courses.values()].sort(
       (a, b) => b.contributions - a.contributions || a.code.localeCompare(b.code),
     ),

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { CourseChat } from "@/components/ai/course-chat";
+import { BrightestReview } from "@/components/course/brightest-review";
 import { CourseHeader } from "@/components/course/course-header";
 import { CourseTabs } from "@/components/course/course-tabs";
 import { FeedControls, feedHref } from "@/components/course/feed-controls";
@@ -25,6 +26,7 @@ import { participationFor } from "@/lib/participation";
 import { getCourse, getCourseTopics, getCourseUnits } from "@/lib/data/courses";
 import {
   FEED_SORTS,
+  getBrightestReview,
   getCourseFeed,
   getPostTypeCounts,
   type FeedSort,
@@ -69,7 +71,7 @@ export default async function CoursePage({
   const sortParam = param(search.sort);
   const sort: FeedSort = FEED_SORTS.includes(sortParam as FeedSort)
     ? (sortParam as FeedSort)
-    : "hot";
+    : "brightest";
   const q = param(search.q);
 
   const [topics, typeCounts] = await Promise.all([
@@ -105,12 +107,14 @@ export default async function CoursePage({
     ...topics.slice(0, 2).map((t) => `Can someone explain ${t.name}?`),
   ];
 
+  const brightest = await getBrightestReview(course.id, user?.id);
+
   const posts = asking
     ? []
     : await getCourseFeed({
         courseId: course.id,
         types: COURSE_TABS[tab].types,
-        sort: tab === "threads" ? sort : "top",
+        sort,
         topicId: activeTopic?.id,
         query: q ?? undefined,
         viewerId: user?.id,
@@ -141,6 +145,7 @@ export default async function CoursePage({
       {signedIn && !participation.allowed && (
         <VerifyPrompt participation={participation} />
       )}
+      {brightest && <BrightestReview post={brightest} />}
 
       <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_16rem]">
         <div className="flex min-w-0 flex-col gap-6">
@@ -183,7 +188,7 @@ export default async function CoursePage({
                   topic={topic}
                   q={q}
                   units={units}
-                  showSort={tab === "threads"}
+                  showSort
                 />
                 {filterNote}
                 {posts.length === 0 ? (

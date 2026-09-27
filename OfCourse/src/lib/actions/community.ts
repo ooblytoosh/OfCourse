@@ -39,32 +39,63 @@ function text(formData: FormData, name: string): string {
   return typeof value === "string" ? value.trim() : "";
 }
 
-// Mark a post helpful, or remove the mark. The database keeps one per
-// student per post, so vote_score is the number of students who found it helpful.
-export async function toggleHelpful(postId: string): Promise<ActionResult> {
+export type BulbValue = -1 | 0 | 1;
+
+// Sets the viewer's lightbulb on a post or comment: 1 = ON (helpful),
+// -1 = OFF (not helpful), 0 = no vote. One vote per student is enforced by
+// the table's key; if two requests race, the second becomes an update.
+export async function setPostBulb(postId: string, value: BulbValue): Promise<ActionResult> {
   const user = await getCurrentUser();
   if (!user) return SIGN_IN_REQUIRED;
+  if (![-1, 0, 1].includes(value)) return { ok: false, error: "That isn't a valid vote." };
   const supabase = await createClient();
+  const mine = () => supabase.from("votes").select("id").eq("post_id", postId).eq("user_id", user.id);
 
-  const { data: existing } = await supabase
-    .from("votes")
-    .select("id")
-    .eq("post_id", postId)
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (!existing && !(await mayParticipate(supabase, await courseOfPost(supabase, postId)))) {
+  if (value === 0) {
+    const { error } = await supabase.from("votes").delete().eq("post_id", postId).eq("user_id", user.id);
+    return finishVote(error);
+  }
+  if (!(await mayParticipate(supabase, await courseOfPost(supabase, postId)))) {
     return { ok: false, error: NOT_ALLOWED_ERROR };
   }
+  const update = () => supabase.from("votes").update({ value }).eq("post_id", postId).eq("user_id", user.id);
+  const { data: existing } = await mine().maybeSingle();
+  let { error } = existing
+    ? await update()
+    : await supabase.from("votes").insert({ post_id: postId, user_id: user.id, value });
+  if (error?.code === UNIQUE_VIOLATION) ({ error } = await update());
+  return finishVote(error);
+}
 
-  const { error } = existing
-    ? await supabase.from("votes").delete().eq("id", existing.id)
-    : await supabase.from("votes").insert({ post_id: postId, user_id: user.id, value: 1 });
+export async function setCommentBulb(commentId: string, value: BulbValue): Promise<ActionResult> {
+  const user = await getCurrentUser();
+  if (!user) return SIGN_IN_REQUIRED;
+  if (![-1, 0, 1].includes(value)) return { ok: false, error: "That isn't a valid vote." };
+  const supabase = await createClient();
 
-  // A double click can race: the unique constraint keeps it to one mark.
-  if (error && error.code !== UNIQUE_VIOLATION) {
-    return { ok: false, error: "Couldn't save that. Try again." };
+  if (value === 0) {
+    const { error } = await supabase.from("comment_votes").delete().eq("comment_id", commentId).eq("user_id", user.id);
+    return finishVote(error);
   }
+  const { data: courseId } = await supabase.rpc("comment_course_id", { p_comment_id: commentId });
+  if (!(await mayParticipate(supabase, courseId))) return { ok: false, error: NOT_ALLOWED_ERROR };
+  const update = () =>
+    supabase.from("comment_votes").update({ value }).eq("comment_id", commentId).eq("user_id", user.id);
+  const { data: existing } = await supabase
+    .from("comment_votes")
+    .select("comment_id")
+    .eq("comment_id", commentId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  let { error } = existing
+    ? await update()
+    : await supabase.from("comment_votes").insert({ comment_id: commentId, user_id: user.id, value });
+  if (error?.code === UNIQUE_VIOLATION) ({ error } = await update());
+  return finishVote(error);
+}
+
+function finishVote(error: { message: string } | null): ActionResult {
+  if (error) return { ok: false, error: "Couldn't save that. Try again." };
   refresh();
   return { ok: true };
 }
@@ -173,6 +204,10 @@ export type PostFormValues = {
   title: string;
   content: string;
   semester: string;
+  // Course reviews only: hours per week, difficulty (1-10), "yes" / "no".
+  workloadHours: string;
+  difficulty: string;
+  wouldTakeAgain: string;
   topicIds: string[];
   integrity: boolean;
 };
@@ -193,8 +228,23 @@ function readPostForm(formData: FormData): PostFormValues {
     title: text(formData, "title"),
     content: text(formData, "content"),
     semester: text(formData, "semester"),
+    workloadHours: text(formData, "workloadHours"),
+    difficulty: text(formData, "difficulty"),
+    wouldTakeAgain: text(formData, "wouldTakeAgain"),
     topicIds: formData.getAll("topicIds").filter((v): v is string => typeof v === "string"),
     integrity: formData.get("integrity") === "on",
+  };
+}
+
+// A review's rating columns (cleared for other post types). Saving a review
+// also updates the author's course rating, via a database trigger, so the
+// course averages include it.
+function reviewRating(values: PostFormValues) {
+  const isReview = values.type === "experience";
+  return {
+    review_workload_hours: isReview ? Number(values.workloadHours) : null,
+    review_difficulty: isReview ? Number(values.difficulty) : null,
+    review_would_take_again: isReview ? values.wouldTakeAgain === "yes" : null,
   };
 }
 
@@ -217,8 +267,20 @@ async function validatePost(
     errors.content = `Posts can be at most ${POST_LIMITS.contentMax.toLocaleString()} characters.`;
   }
   // Only course reviews say when the student took the course.
+  // Only course reviews say when the student took the course, and rate it.
   if (values.type === "experience") {
     if (!isValidSemester(values.semester)) errors.semester = "Choose the semester you took the course.";
+    const hours = Number(values.workloadHours);
+    if (values.workloadHours === "" || !Number.isInteger(hours) || hours < 0 || hours > 60) {
+      errors.workloadHours = "Enter your hours per week (0–60).";
+    }
+    const difficulty = Number(values.difficulty);
+    if (!Number.isInteger(difficulty) || difficulty < 1 || difficulty > 10) {
+      errors.difficulty = "Choose a difficulty from 1 to 10.";
+    }
+    if (values.wouldTakeAgain !== "yes" && values.wouldTakeAgain !== "no") {
+      errors.wouldTakeAgain = "Would you take it again?";
+    }
   } else {
     values.semester = "";
   }
@@ -273,6 +335,7 @@ export async function createPost(
       title: values.title,
       content: values.content,
       semester: values.semester || null,
+      ...reviewRating(values),
       integrity_attested_at: new Date().toISOString(),
     })
     .select("id")
@@ -326,6 +389,7 @@ export async function updatePost(
       title: values.title,
       content: values.content,
       semester: values.semester || null,
+      ...reviewRating(values),
       integrity_attested_at: new Date().toISOString(),
     })
     .eq("id", postId);

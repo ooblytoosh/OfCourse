@@ -1,4 +1,4 @@
-import { ArrowBigUp, FileText, MessageSquare } from "lucide-react";
+import { FileText, MessageSquare } from "lucide-react";
 import Link from "next/link";
 
 import { PostTypeBadge } from "@/components/post/post-type-badge";
@@ -8,6 +8,8 @@ import type { Unit } from "@/lib/data/courses";
 import type { PostSummary } from "@/lib/data/posts";
 import { slugify } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { BulbIcon } from "@/components/bulb/bulb-icon";
+import { bulbSummary } from "@/lib/bulb";
 
 function ResourceRow({ post }: { post: PostSummary }) {
   return (
@@ -32,10 +34,10 @@ function ResourceRow({ post }: { post: PostSummary }) {
         </p>
       </div>
       <p className="flex shrink-0 items-center gap-3 text-xs text-muted-foreground tabular-nums">
-        <span className="inline-flex items-center gap-1" title="Upvotes">
-          <ArrowBigUp className="size-3.5" aria-hidden />
-          {post.voteScore}
-          <span className="sr-only">upvotes</span>
+        <span className="inline-flex items-center gap-1" title={bulbSummary(post.bulb.lit, post.bulb.off, post.bulb.level)}>
+          <BulbIcon level={post.bulb.level} size={13} />
+          {post.bulb.lit}
+          <span className="sr-only">lit. {bulbSummary(post.bulb.lit, post.bulb.off, post.bulb.level)}</span>
         </span>
         <span className="inline-flex items-center gap-1">
           <MessageSquare className="size-3.5" aria-hidden />

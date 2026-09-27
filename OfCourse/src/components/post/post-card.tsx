@@ -1,15 +1,16 @@
 import { MessageSquare } from "lucide-react";
 import Link from "next/link";
 
+import { BulbVote } from "@/components/bulb/bulb-vote";
 import { PostMeta } from "@/components/post/post-meta";
 import { PostTypeBadge } from "@/components/post/post-type-badge";
+import { ReviewRating } from "@/components/post/review-rating";
 import { SaveButton } from "@/components/post/save-button";
 import { TopicChip } from "@/components/post/topic-chip";
-import { UpvoteButton } from "@/components/post/upvote-button";
 import type { PostSummary } from "@/lib/data/posts";
 import { preview } from "@/lib/format";
 
-// A post in a list: upvotes on the left; type, title, author, preview and
+// A post in a list: its lightbulb on the left; type, title, author, preview and
 // actions on the right. The whole card opens the post; buttons sit above it.
 export function PostCard({
   post,
@@ -26,10 +27,10 @@ export function PostCard({
 
   return (
     <article className="surface surface-interactive relative flex gap-4 p-4 sm:p-5">
-      <UpvoteButton
-        postId={post.id}
-        voted={post.viewerFoundHelpful}
-        count={post.voteScore}
+      <BulbVote
+        kind="post"
+        id={post.id}
+        bulb={post.bulb}
         signedIn={signedIn}
         canVote={canVote}
         layout="stacked"
@@ -63,6 +64,8 @@ export function PostCard({
             editedAt={post.editedAt}
           />
         </div>
+
+        {post.review && <ReviewRating rating={post.review} className="mt-2" />}
 
         <p className="mt-2.5 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
           {preview(post.content, 260)}

@@ -4,6 +4,8 @@ import { ChevronDown, MessageSquareReply, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useState, useTransition } from "react";
 
+import { BulbVote } from "@/components/bulb/bulb-vote";
+import { LumensBadge } from "@/components/bulb/lumens-badge";
 import { CommentForm } from "@/components/post/comment-form";
 import { toast } from "@/components/toaster";
 import { Button } from "@/components/ui/button";
@@ -24,10 +26,14 @@ const actionClass =
 function CommentBody({
   comment,
   viewerId,
+  signedIn,
+  canVote,
   children,
 }: {
   comment: CommentNode;
   viewerId?: string;
+  signedIn: boolean;
+  canVote: boolean;
   children?: React.ReactNode;
 }) {
   const [editing, setEditing] = useState(false);
@@ -79,6 +85,7 @@ function CommentBody({
             {authorName(null)}
           </span>
         )}
+        {comment.author && <LumensBadge lumens={comment.author.lumens} />}
         {comment.author?.university && <VerifiedBadge university={comment.author.university} />}
         <span className="text-muted-foreground" aria-hidden>
           ·
@@ -126,8 +133,9 @@ function CommentBody({
         </p>
       )}
 
-      {(children || (isOwn && !editing)) && (
-        <div className="mt-1 flex items-center gap-1 pl-6">
+      {!editing && (
+        <div className="mt-1 flex flex-wrap items-center gap-1 pl-7">
+          <BulbVote kind="comment" id={comment.id} bulb={comment.bulb} signedIn={signedIn} canVote={canVote} layout="compact" />
           {children}
           {isOwn && !editing && (
             <>
@@ -200,7 +208,7 @@ function TopLevelComment({
 
   return (
     <li className="flex flex-col gap-2">
-      <CommentBody comment={comment} viewerId={viewerId}>
+      <CommentBody comment={comment} viewerId={viewerId} signedIn={signedIn} canVote={canReply}>
         {replyButton(comment)}
         {replyCount > 0 && (
           <button
@@ -221,7 +229,7 @@ function TopLevelComment({
         <ul className="ml-3 flex flex-col gap-4 border-l-2 pl-5 animate-in fade-in slide-in-from-top-1 duration-200">
           {comment.replies.map((reply) => (
             <li key={reply.id}>
-              <CommentBody comment={reply} viewerId={viewerId}>
+              <CommentBody comment={reply} viewerId={viewerId} signedIn={signedIn} canVote={canReply}>
                 {replyButton(reply)}
               </CommentBody>
             </li>

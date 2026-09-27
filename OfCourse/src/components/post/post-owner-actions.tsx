@@ -36,7 +36,7 @@ export function PostOwnerActions({ postId, editHref }: { postId: string; editHre
         open={confirming}
         onOpenChange={setConfirming}
         title="Delete this post?"
-        description="Its comments and upvotes will be removed too. This can't be undone."
+        description="Its comments and lightbulb votes will be removed too. This can't be undone."
         confirmLabel="Delete post"
         onConfirm={() =>
           startTransition(async () => {

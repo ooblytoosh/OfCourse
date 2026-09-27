@@ -274,3 +274,23 @@ export async function getCoursesWithTopics(universityId?: string) {
       })),
   }));
 }
+
+// The student's own course ratings by course id, to prefill a new review.
+export async function getViewerRatings(userId: string): Promise<Record<string, CourseRating>> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("course_ratings")
+    .select("course_id, workload_hours, difficulty, would_take_again, semester")
+    .eq("user_id", userId);
+  return Object.fromEntries(
+    (data ?? []).map((r) => [
+      r.course_id,
+      {
+        workloadHours: r.workload_hours,
+        difficulty: r.difficulty,
+        wouldTakeAgain: r.would_take_again,
+        semester: r.semester,
+      },
+    ]),
+  );
+}

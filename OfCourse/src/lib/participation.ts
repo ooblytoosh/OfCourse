@@ -1,6 +1,6 @@
 import type { Profile } from "@/lib/data/profiles";
 
-// Whether the viewer can take part in a course (join, post, comment, upvote,
+// Whether the viewer can take part in a course (join, post, comment, vote,
 // rate, ask the AI). Reading is always open. The database enforces the same
 // rule (public.can_participate); this only decides what the page shows.
 export type Participation =
@@ -19,7 +19,7 @@ export function participationFor(
       allowed: false,
       reason: "verify",
       message:
-        "Verify your university email to join courses, post, comment, upvote, rate courses and ask the AI.",
+        "Verify your university email to join courses, post, comment, vote with lightbulbs, rate courses and ask the AI.",
     };
   }
   if (profile.university.id !== course.universityId) {
